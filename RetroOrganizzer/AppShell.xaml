@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="RetroOrganizzer.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:RetroOrganizzer"
+    Shell.FlyoutBehavior="Disabled">
+
+    <!--<ShellContent
+        Title="Home"
+        ContentTemplate="{DataTemplate local:MainPage}"
+        Route="MainPage" />-->
+
+    <!-- Adicione um FlyoutItem que aponte para a sua DirectoryPage -->
+    <FlyoutItem Title="Diretórios">
+        <ShellContent ContentTemplate="{DataTemplate local:DirectoryPage}" />
+    </FlyoutItem>
+
+</Shell>

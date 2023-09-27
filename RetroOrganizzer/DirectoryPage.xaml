@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RetroOrganizzer.DirectoryPage">
+
+    <StackLayout>
+        <!-- Campo para inserir o diretório -->
+        <Entry x:Name="DirectoryEntry" Placeholder="Insira o diretório" />
+
+        <!-- Botão para listar diretórios -->
+        <Button Text="Listar Diretórios" Clicked="ListDirectories_Clicked" />
+
+        <Grid>
+            <!-- Lista de diretórios à esquerda -->
+            <ListView x:Name="DirectoriesListView" SelectionMode="Single">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextCell Text="{Binding}" />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <!-- Conteúdo da pasta selecionada à direita -->
+            <ListView x:Name="ContentsListView">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextCell Text="{Binding}" />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+    </StackLayout>
+
+</ContentPage>
