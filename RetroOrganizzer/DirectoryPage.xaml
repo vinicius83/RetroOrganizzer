@@ -1,34 +1,100 @@
 <?xml version="1.0" encoding="utf-8" ?>
+
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="RetroOrganizzer.DirectoryPage">
+             x:Class="RetroOrganizzer.DirectoryPage"
+             Padding="10"
+             BackgroundColor="White">
 
-    <StackLayout>
-        <!-- Campo para inserir o diretório -->
-        <Entry x:Name="DirectoryEntry" Placeholder="Insira o diretório" />
+    <ContentPage.Resources>
+        <!--Nome e ID para lista de jogos no XML-->
+        <DataTemplate x:Key="GameCell">
+            <ViewCell>
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="{Binding Name}" VerticalOptions="CenterAndExpand" TextColor="White"/>
+                </StackLayout>
+            </ViewCell>
+        </DataTemplate>
+    </ContentPage.Resources>
 
-        <!-- Botão para listar diretórios -->
-        <Button Text="Listar Diretórios" Clicked="ListDirectories_Clicked" />
+    <StackLayout BackgroundColor="#DEECF7" Padding="10">
+        <StackLayout Orientation="Horizontal" Spacing="10">
+            <Label Text="Selecione o XML" TextColor="Black" FontSize="16" VerticalOptions="CenterAndExpand"/>
+            <Button Text="Carregar" Clicked="EscolherXML_Clicked" BackgroundColor="#007BFF" TextColor="White" FontSize="16" VerticalOptions="CenterAndExpand"/>
+        </StackLayout>
+        <Label x:Name="lblPastaSelecionada" Text="" TextColor="Black" FontSize="14" Margin="0,10,0,10"/>
 
         <Grid>
-            <!-- Lista de diretórios à esquerda -->
-            <ListView x:Name="DirectoriesListView" SelectionMode="Single">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <TextCell Text="{Binding}" />
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="3*" />
+            </Grid.ColumnDefinitions>
 
-            <!-- Conteúdo da pasta selecionada à direita -->
-            <ListView x:Name="ContentsListView">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <TextCell Text="{Binding}" />
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+            <StackLayout Grid.Column="0">
+                <ListView x:Name="listaDeJogos" ItemTemplate="{StaticResource GameCell}" SelectionMode="Single" BackgroundColor="#6D6F71" >
+                </ListView>
+            </StackLayout>
+
+            <Frame Grid.Column="1" BackgroundColor="#DEECF7" BorderColor="Transparent" />
+
+            <StackLayout Grid.Column="2" BackgroundColor="#6D6F71">
+                <StackLayout>
+                    <Label Text="Path" TextColor="White" />
+                    <Entry x:Name="PathEntry" BackgroundColor="White" TextColor="Black" />
+                </StackLayout>
+                <StackLayout>
+                    <Label Text="Name" TextColor="White" />
+                    <Entry x:Name="NameEntry" BackgroundColor="White" TextColor="Black" />
+                </StackLayout>
+                <StackLayout>
+                    <Label Text="Desc" TextColor="White" />
+                    <Editor x:Name="DescEditor" BackgroundColor="White" TextColor="Black" />
+                </StackLayout>
+                <StackLayout>
+                    <Label Text="Release Date" TextColor="White" />
+                    <Entry x:Name="ReleaseDateEntry" BackgroundColor="White" TextColor="Black" />
+                </StackLayout>
+                <StackLayout>
+                    <Label Text="Developer" TextColor="White" />
+                    <Entry x:Name="DeveloperEntry" BackgroundColor="White" TextColor="Black" />
+                </StackLayout>
+                <StackLayout>
+                    <Label Text="Publisher" TextColor="White" />
+                    <Entry x:Name="PublisherEntry" BackgroundColor="White" TextColor="Black" />
+                </StackLayout>
+                <StackLayout>
+                    <Label Text="Genre" TextColor="White" />
+                    <Entry x:Name="GenreEntry" BackgroundColor="White" TextColor="Black" />
+                </StackLayout>
+                <StackLayout>
+                    <Label Text="Players" TextColor="White" />
+                    <Entry x:Name="PlayersEntry" BackgroundColor="White" TextColor="Black" />
+                </StackLayout>
+                <StackLayout>
+                    <Label Text="Language" TextColor="White" />
+                    <Entry x:Name="LangEntry" BackgroundColor="White" TextColor="Black" />
+                </StackLayout>
+            </StackLayout>
+
+            <Frame Grid.Column="3" BackgroundColor="#DEECF7" BorderColor="Transparent"/>
+
+            <StackLayout Grid.Column="4" BackgroundColor="#6D6F71">
+                <StackLayout>
+                    <Label Text="Image" TextColor="White" />
+                    <Entry x:Name="ImageEntry" BackgroundColor="White" TextColor="Black" />
+                    <Image x:Name="ImageDisplay" />
+                </StackLayout>
+                <StackLayout>
+                    <Label Text="Marquee" TextColor="White" />
+                    <Entry x:Name="MarqueeEntry" BackgroundColor="White" TextColor="Black" />
+                    <Image x:Name="MarqueeDisplay" />
+                </StackLayout>
+            </StackLayout>
+
         </Grid>
     </StackLayout>
-
 </ContentPage>
+
