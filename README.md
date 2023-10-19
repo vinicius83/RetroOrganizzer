@@ -12,3 +12,5 @@ A principal função do App:
   - etc
   - etc
   - etc
+
+![image](https://github.com/vinicius83/RetroOrganizzer/assets/34111669/90f46a15-b433-462d-a083-8c702db54181)
