@@ -6,7 +6,16 @@
         {
             InitializeComponent();
 
-            MainPage = new AppShell();
+            App.Current.UserAppTheme = AppTheme.Light;
+
+            if (DeviceInfo.Idiom == DeviceIdiom.Phone)
+            {
+                //MainPage = new AppShellMobile();
+            }
+            else
+            {
+                MainPage = new AppShell();
+            }
         }
     }
 }

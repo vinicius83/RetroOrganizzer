@@ -3,13 +3,13 @@ using System;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace RetroOrganizzer;
+namespace RetroOrganizzer.Pages;
 
-public partial class DirectoryPage : ContentPage
+public partial class XMLEditor : ContentPage
 {
     private static readonly int REQUEST_DIRECTORY = 1;
 
-    public DirectoryPage()
+    public XMLEditor()
     {
         InitializeComponent();
     }

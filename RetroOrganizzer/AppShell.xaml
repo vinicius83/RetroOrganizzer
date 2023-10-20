@@ -1,19 +1,106 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<Shell
-    x:Class="RetroOrganizzer.AppShell"
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:RetroOrganizzer"
-    Shell.FlyoutBehavior="Disabled">
+<?xml version="1.0" encoding="utf-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:pages="clr-namespace:RetroOrganizzer.Pages"
+       xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+       x:Class="RetroOrganizzer.AppShell"
+       FlyoutWidth="104" 
+       FlyoutBehavior="Locked">
 
-    <!--<ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />-->
+    <Shell.Resources>
+        <Color x:Key="IconTintColor">White</Color>
 
-    <!-- Adicione um FlyoutItem que aponte para a sua DirectoryPage -->
-    <FlyoutItem Title="Diretórios">
-        <ShellContent ContentTemplate="{DataTemplate local:DirectoryPage}" />
+        <ControlTemplate x:Key="MenuItemTemplate">
+            <Grid RowDefinitions="Auto">
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CheckedStates">
+                            <VisualState x:Name="Checked">
+                                <VisualState.Setters>
+                                    <Setter TargetName="OuterBorder" Property="Background" Value="{StaticResource DarkBg1Brush}" />
+                                    <Setter TargetName="OuterBorder" Property="Border.StrokeThickness" Value="1" />
+                                    <Setter TargetName="InnerBorder" Property="Background" Value="Transparent" />
+                                    <Setter TargetName="InnerBorder" Property="Border.StrokeThickness" Value="1" />
+                                </VisualState.Setters>
+                            </VisualState>
+
+                            <VisualState x:Name="Unchecked">
+                                <VisualState.Setters>
+                                    <Setter TargetName="OuterBorder" Property="Background" Value="Transparent" />
+                                    <Setter TargetName="OuterBorder" Property="Border.StrokeThickness" Value="0" />
+                                    <Setter TargetName="InnerBorder" Property="Background" Value="Transparent" />
+                                    <Setter TargetName="InnerBorder" Property="Border.StrokeThickness" Value="0" />
+                                </VisualState.Setters>
+                            </VisualState>
+
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </VisualStateManager.VisualStateGroups>
+
+                <Border x:Name="OuterBorder" 
+                     Background="Transparent"
+                     Stroke="{StaticResource DarkBg1Brush}" 
+                     StrokeThickness="0"
+                     HorizontalOptions="Fill"
+                     HeightRequest="70"
+                     Margin="15,0,0,0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12,0,12,0" />
+                    </Border.StrokeShape>
+                </Border>
+
+                <Border x:Name="InnerBorder" 
+                     Background="Transparent"
+                     Margin="20" 
+                     HorizontalOptions="Center" 
+                     VerticalOptions="Center"
+                     Stroke="{StaticResource PrimaryBrush}" 
+                     StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                </Border>
+
+                <ContentPresenter x:Name="CP"/>
+            </Grid>
+        </ControlTemplate>
+    </Shell.Resources>
+
+    <Shell.FlyoutContentTemplate>
+        <DataTemplate>
+            <Grid Background="{StaticResource DarkBg2Brush}"
+              RowDefinitions="*,*,*,*,*,*,*,*"
+              RadioButtonGroup.GroupName="Menu"
+              RadioButtonGroup.SelectedValue="{Binding SelectedRoute}">
+                <Grid.Resources>
+                    <Style TargetType="RadioButton">
+                        <Setter Property="ControlTemplate" Value="{StaticResource MenuItemTemplate}"/>
+                    </Style>
+                </Grid.Resources>
+
+
+                <RadioButton Value="xmleditor" IsChecked="True" Grid.Row="0"
+                         CheckedChanged="OnMenuItemChanged">
+                    <RadioButton.Content>
+                        <Image Source="xml.png" WidthRequest="45" HeightRequest="45" Aspect="AspectFit">
+
+                        </Image>
+                    </RadioButton.Content>
+                </RadioButton>
+
+
+                <Image Source="logout.png"  Grid.Row="7"  WidthRequest="45" HeightRequest="45" Aspect="AspectFit">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnLogoutTapped" />
+                    </Image.GestureRecognizers>
+                </Image>
+
+            </Grid>
+        </DataTemplate>
+    </Shell.FlyoutContentTemplate>
+    <FlyoutItem Title="XML Editor" Route="xmleditor">
+        <ShellContent ContentTemplate="{DataTemplate pages:XMLEditor}" />
     </FlyoutItem>
+
 
 </Shell>

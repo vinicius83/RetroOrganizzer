@@ -53,13 +53,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Update="DirectoryPage.xaml.cs">
-	    <DependentUpon>DirectoryPage.xaml</DependentUpon>
+	  <Compile Update="Pages\XMLEditor.xaml.cs">
+	    <DependentUpon>XMLEditor.xaml</DependentUpon>
 	  </Compile>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <MauiXaml Update="DirectoryPage.xaml">
+	  <MauiXaml Update="Pages\XMLEditor.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>
