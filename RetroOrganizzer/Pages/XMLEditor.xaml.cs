@@ -1,7 +1,6 @@
-
-using System;
+using CommunityToolkit.Maui.Views;
+using RetroOrganizzer.Converters;
 using System.Xml;
-using System.Xml.Linq;
 
 namespace RetroOrganizzer.Pages;
 
@@ -15,12 +14,16 @@ public partial class XMLEditor : ContentPage
     }
 
     List<string> nomesDeJogos = new List<string>();
+    List<string> jogosNaoEncontrados = new List<string>();
     string xmlFilePath;
 
     private async void EscolherXML_Clicked(object sender, EventArgs e)
     {
         try
         {
+            loadingIndicator.IsRunning = true;
+            loadingIndicator.IsVisible = true;
+
             var result = await FilePicker.PickAsync(PickOptions.Default);
 
             if (result != null)
@@ -33,6 +36,8 @@ public partial class XMLEditor : ContentPage
                     XmlDocument xmlDoc = new XmlDocument();
                     xmlDoc.Load(xmlFilePath);
 
+                    string xmlDirectory = Path.GetDirectoryName(xmlFilePath);
+
                     // Extrair os nomes dos jogos do XML
                     XmlNodeList gameNodes = xmlDoc.SelectNodes("/gameList/game");
 
@@ -40,12 +45,21 @@ public partial class XMLEditor : ContentPage
 
                     foreach (XmlNode gameNode in gameNodes)
                     {
-                        string id = gameNode.Attributes["id"]?.Value;
+                        //string id = gameNode.Attributes["id"]?.Value;
+                        string path = gameNode.SelectSingleNode("path")?.InnerText;
                         string name = gameNode.SelectSingleNode("name")?.InnerText;
-                        if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(name))
+
+                        if (!string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(name))
                         {
-                            gamesInfo.Add(new GameInfo { ID = id, Name = name });
+                            GameInfo game = new GameInfo { Path = path, Name = name };
+
+                            string gamePath = path.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
+                            gamePath = Path.Combine(xmlDirectory, gamePath);
+                            game.IsGameNotFound = File.Exists(gamePath) ? false : true;
+
+                            gamesInfo.Add(game);
                         }
+
                     }
 
                     // Exibir os nomes dos jogos em uma lista (ListView)
@@ -65,22 +79,120 @@ public partial class XMLEditor : ContentPage
             {
                 lblPastaSelecionada.Text = "Nenhum arquivo selecionado.";
             }
+
+            loadingIndicator.IsRunning = false;
+            loadingIndicator.IsVisible = false;
         }
         catch (Exception ex)
         {
             // Lida com erros, se houver algum
             lblPastaSelecionada.Text = $"Erro: {ex.Message}";
+            loadingIndicator.IsRunning = false;
+            loadingIndicator.IsVisible = false;
         }
+    }
+
+    private void LimparXML_Clicked(object sender, EventArgs e)
+    {
+        loadingIndicator.IsRunning = true;
+        loadingIndicator.IsVisible = true;
+
+        List<GameInfo> jogosNaoEncontrados = listaDeJogos.ItemsSource.Cast<GameInfo>().Where(x => x.IsGameNotFound).ToList();
+        List<GameInfo> jogosEncontrados = listaDeJogos.ItemsSource.Cast<GameInfo>().Where(x => x.IsGameNotFound).ToList();
+
+        XmlDocument xmlDoc = new XmlDocument();
+        xmlDoc.Load(xmlFilePath);
+
+        //Busca os jogos que não possuem mais paths
+        foreach (GameInfo game in jogosNaoEncontrados)
+        {
+            string xpathQuery = $"//game[path='{game.Path}']";
+            XmlNode gameNode = xmlDoc.SelectSingleNode(xpathQuery.Replace("'", "\""));
+
+            //Deleta os jogos que não possuem mais paths
+            if (gameNode != null)
+            {
+                gameNode.ParentNode.RemoveChild(gameNode);
+            }
+
+            if (LimparArquivosCheckBox.IsChecked)
+            {
+                //Deleta imagens, marquee e videos
+                string imageValue = gameNode.SelectSingleNode("image")?.InnerText;
+                string marqueeValue = gameNode.SelectSingleNode("marquee")?.InnerText;
+                string videoValue = gameNode.SelectSingleNode("video")?.InnerText;
+
+                //Verifica se as midias fazem parte da lista de algum outro game da lista jogosEncontrados
+                string xGameIDQuery = $"//game[name='{game.Name}']";
+                XmlNode gameNodebyID = xmlDoc.SelectSingleNode(xGameIDQuery.Replace("'", "\""));
+
+                //Pega o node que esta na lista de jogosEncontrados puxando pelo path de gameNodebyID
+                //List<GameInfo> lstGameEncontrado = jogosEncontrados.Where(x => x.Path == gameNodebyID.SelectSingleNode("path")?.InnerText).ToList();
+
+
+                //TODO : Verificar se o jogo esta na lista de jogos encontrados e verificar se posso apagar midia
+                throw new NotImplementedException();
+
+
+                if (imageValue != null)
+                {
+                    imageValue = imageValue.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
+                    imageValue = Path.Combine(Path.GetDirectoryName(xmlFilePath), imageValue);
+                    if (File.Exists(imageValue))
+                    {
+                        File.Delete(imageValue);
+                    }
+                }
+
+                if (marqueeValue != null)
+                {
+                    marqueeValue = marqueeValue.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
+                    marqueeValue = Path.Combine(Path.GetDirectoryName(xmlFilePath), marqueeValue);
+                    if (File.Exists(marqueeValue))
+                    {
+                        File.Delete(marqueeValue);
+                    }
+                }
+
+                if (videoValue != null)
+                {
+                    videoValue = videoValue.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
+                    videoValue = Path.Combine(Path.GetDirectoryName(xmlFilePath), videoValue);
+                    if (File.Exists(videoValue))
+                    {
+                        File.Delete(videoValue);
+                    }
+                }
+            }
+
+            listaDeJogos.ItemsSource = listaDeJogos.ItemsSource.Cast<GameInfo>().Where(x => x.Path != game.Path).ToList();
+
+            //Salva o arquivo XML
+            xmlDoc.Save(xmlFilePath);
+        }
+
+        //Limpa os campos
+        LimpaCampos();
+
+        loadingIndicator.IsRunning = false;
+        loadingIndicator.IsVisible = false;
+
+        //Exibe mensagem de sucesso
+        DisplayAlert("XML Limpo", "O arquivo XML foi limpo com sucesso.", "OK");
     }
 
     private void listaDeJogos_ItemSelected(object sender, SelectedItemChangedEventArgs e)
     {
+        loadingIndicator.IsRunning = true;
+        loadingIndicator.IsVisible = true;
+
         if (e.SelectedItem != null && !string.IsNullOrEmpty(xmlFilePath))
         {
+            LimpaCampos();
             GameInfo selectedGame = e.SelectedItem as GameInfo;
-            string selectedGameID = selectedGame.ID;
+            string selectedGamePath = selectedGame.Path;
 
-            string xpathQuery = $"//game[@id='{selectedGameID}']";
+            string xpathQuery = $"//game[path='{selectedGamePath}']";
 
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.Load(xmlFilePath);
@@ -91,7 +203,7 @@ public partial class XMLEditor : ContentPage
             {
                 string xmlDirectory = Path.GetDirectoryName(xmlFilePath);
 
-               // string gameID = gameNode.SelectSingleNode("gameID")?.InnerText;
+                string gameID = gameNode.Attributes["id"]?.Value;
                 string path = gameNode.SelectSingleNode("path")?.InnerText;
                 string name = gameNode.SelectSingleNode("name")?.InnerText;
                 string desc = gameNode.SelectSingleNode("desc")?.InnerText;
@@ -102,6 +214,7 @@ public partial class XMLEditor : ContentPage
                 string playersValue = gameNode.SelectSingleNode("players")?.InnerText;
                 string langValue = gameNode.SelectSingleNode("lang")?.InnerText;
 
+                GameIDEntry.Text = gameID;
                 PathEntry.Text = path;
                 NameEntry.Text = name;
                 DescEditor.Text = desc;
@@ -114,9 +227,11 @@ public partial class XMLEditor : ContentPage
 
                 string imageValue = gameNode.SelectSingleNode("image")?.InnerText;
                 string marqueeValue = gameNode.SelectSingleNode("marquee")?.InnerText;
+                string videoValue = gameNode.SelectSingleNode("video")?.InnerText;
 
                 ImageEntry.Text = imageValue;
                 MarqueeEntry.Text = marqueeValue;
+                VideoEntry.Text = videoValue;
 
                 if (imageValue != null)
                 {
@@ -125,10 +240,6 @@ public partial class XMLEditor : ContentPage
                     if (File.Exists(imageValue))
                     {
                         ImageDisplay.Source = ImageSource.FromFile(imageValue);
-                    }
-                    else
-                    {
-                        ImageDisplay.Source = null;
                     }
                 }
 
@@ -140,19 +251,56 @@ public partial class XMLEditor : ContentPage
                     {
                         MarqueeDisplay.Source = ImageSource.FromFile(marqueeValue);
                     }
-                    else
+                }
+
+                if (videoValue != null)
+                {
+                    videoValue = videoValue.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
+                    videoValue = Path.Combine(xmlDirectory, videoValue);
+                    if (File.Exists(videoValue))
                     {
-                        MarqueeDisplay.Source = null;
+                        VideoDisplay.Source = MediaSource.FromFile(videoValue);
+                        VideoDisplay.Stop();
+                        VideoDisplay.Play();
                     }
+                }
+
+                if (selectedGame.IsGameNotFound)
+                {
+                    DisplayAlert("Arquivo do Jogo", $"O arquivo do jogo {selectedGame.Path} não foi encontrado.", "OK");
                 }
             }
         }
+
+        loadingIndicator.IsRunning = false;
+        loadingIndicator.IsVisible = false;
+    }
+
+    private void LimpaCampos()
+    {
+        GameIDEntry.Text = "";
+        PathEntry.Text = "";
+        NameEntry.Text = "";
+        DescEditor.Text = "";
+        ReleaseDateEntry.Text = "";
+        DeveloperEntry.Text = "";
+        PublisherEntry.Text = "";
+        GenreEntry.Text = "";
+        PlayersEntry.Text = "";
+        LangEntry.Text = "";
+        ImageEntry.Text = "";
+        MarqueeEntry.Text = "";
+
+        ImageDisplay.Source = null;
+        MarqueeDisplay.Source = null;
+        VideoDisplay.Source = null;
     }
 
     public class GameInfo
     {
-        public string ID { get; set; }
+        public string Path { get; set; }
         public string Name { get; set; }
+        public bool IsGameNotFound { get; set; }
     }
 
 }

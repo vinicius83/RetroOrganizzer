@@ -2,10 +2,12 @@
 
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:a="clr-namespace:RetroOrganizzer"
              xmlns:system="clr-namespace:System;assembly=netstandard"
              xmlns:pages="clr-namespace:RetroOrganizzer.Pages"
              x:Class="RetroOrganizzer.Pages.XMLEditor"
+           
              Title="XML"
              Style="{StaticResource LightBorderView}"
              Shell.NavBarIsVisible="False">
@@ -15,16 +17,26 @@
         <DataTemplate x:Key="GameCell">
             <ViewCell>
                 <StackLayout Orientation="Horizontal">
-                    <Label Text="{Binding Name}" VerticalOptions="CenterAndExpand" TextColor="White"/>
+                    <Label Text="{Binding Name}" VerticalOptions="CenterAndExpand" TextColor="White">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsGameNotFound}" Value="True">
+                                <Setter Property="TextColor" Value="Red" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
                 </StackLayout>
             </ViewCell>
         </DataTemplate>
     </ContentPage.Resources>
 
-    <StackLayout Padding="10">
-        <!--Selecionar XML-->
-        <Grid Margin="1" IsClippedToBounds="False" HorizontalOptions="FillAndExpand">
-            <VerticalStackLayout Spacing="2">
+    <Grid>
+        <StackLayout Padding="10">
+            <!--Selecionar XML-->
+            <Grid Margin="1" IsClippedToBounds="False" HorizontalOptions="FillAndExpand">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
                 <Border Grid.Column="0"  HorizontalOptions="FillAndExpand" Style="{StaticResource DarkBorderView}" >
                     <Grid Margin="16" IsClippedToBounds="False">
                         <StackLayout Orientation="Vertical" Spacing="10">
@@ -34,86 +46,134 @@
                         </StackLayout>
                     </Grid>
                 </Border>
-            </VerticalStackLayout>
-        </Grid>
-
-        <!--Dados do XML-->
-        <Grid Margin="1" IsClippedToBounds="True" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand">
-
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <Border Grid.Column="0" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" Style="{StaticResource DarkBorderView}" >
-                <Grid Margin="16" IsClippedToBounds="False">
-                    <VerticalStackLayout Spacing="1">
-                        <StackLayout>
-                            <ListView x:Name="listaDeJogos" ItemTemplate="{StaticResource GameCell}" SelectionMode="Single" >
-                            </ListView>
+                <Border Grid.Column="1" HorizontalOptions="FillAndExpand" Style="{StaticResource DarkBorderView}">
+                    <Grid Margin="16" IsClippedToBounds="False">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <StackLayout Grid.Row="0"  Orientation="Horizontal" Spacing="10">
+                            <Button Text="Limpar XML" Clicked="LimparXML_Clicked" BackgroundColor="#007BFF" TextColor="White" FontSize="16" VerticalOptions="CenterAndExpand" />
                         </StackLayout>
-                    </VerticalStackLayout>
-                </Grid>
-            </Border>
-
-            <Border Grid.Column="1" HorizontalOptions="FillAndExpand"  Margin="10,0,0,0" Style="{StaticResource DarkBorderView}" >
-                <Grid Margin="16" IsClippedToBounds="False">
-
-                    <VerticalStackLayout Spacing="1" HorizontalOptions="FillAndExpand">
-
-                        <Label Grid.Column="0" Text="Path"  />
-                        <Entry Grid.Column="1" x:Name="PathEntry"  HorizontalOptions="FillAndExpand" />
-
-                        <Label Text="Name" />
-                        <Entry x:Name="NameEntry"  />
-
-                        <Label Text="Desc"  />
-                        <ScrollView>
-                            <Editor x:Name="DescEditor"  />
-                        </ScrollView>
-
-                        <Label Text="Release Date"  />
-                        <Entry x:Name="ReleaseDateEntry"  />
-
-                        <Label Text="Developer"  />
-                        <Entry x:Name="DeveloperEntry"  />
-
-                        <Label Text="Publisher"  />
-                        <Entry x:Name="PublisherEntry"  />
-
-                        <Label Text="Genre"  />
-                        <Entry x:Name="GenreEntry"  />
-
-                        <Label Text="Players"  />
-                        <Entry x:Name="PlayersEntry"  />
-
-                        <Label Text="Language"  />
-                        <Entry x:Name="LangEntry"  />
-
-                    </VerticalStackLayout>
-                </Grid>
-            </Border>
-
-            <Border Grid.Column="2" VerticalOptions="FillAndExpand" Margin="10,0,0,0" Style="{StaticResource DarkBorderView}" >
-                <Grid Margin="16" IsClippedToBounds="False" >
-                    <VerticalStackLayout Spacing="1">
-                        <StackLayout>
-                            <Label Text="Image"  />
-                            <Entry x:Name="ImageEntry"  />
-                            <Image x:Name="ImageDisplay" />
+                        <StackLayout Grid.Row="1"  Orientation="Horizontal" Spacing="10">
+                            <CheckBox x:Name="LimparArquivosCheckBox" Grid.Column="0" VerticalOptions="CenterAndExpand" />
+                            <Label Grid.Column="1" Text="Excluir arquivos de mídia" VerticalOptions="CenterAndExpand" />
                         </StackLayout>
-                        <StackLayout>
+                    </Grid>
+                </Border>
+            </Grid>
+            <!--Dados do XML-->
+            <Grid Margin="1" IsClippedToBounds="True" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" >
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="1.2*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" Style="{StaticResource DarkBorderView}" >
+                    <ScrollView>
+                        <Grid Margin="16" IsClippedToBounds="False">
+                            <VerticalStackLayout Spacing="1">
+                                <StackLayout>
+                                    <ListView x:Name="listaDeJogos" ItemTemplate="{StaticResource GameCell}" SelectionMode="Single" >
+                                    </ListView>
+                                </StackLayout>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </ScrollView>
+                </Border>
+
+                <Border Grid.Column="1" HorizontalOptions="FillAndExpand"  Margin="10,0,0,0" Style="{StaticResource DarkBorderView}" >
+                    <ScrollView>
+                        <Grid Margin="16" IsClippedToBounds="False">
+                            <VerticalStackLayout Spacing="1" HorizontalOptions="FillAndExpand">
+                                <StackLayout>
+                                    <Label Text="Name" />
+                                    <Entry x:Name="NameEntry"  />
+                                </StackLayout>
+                                <StackLayout>
+                                    <Label Text="Game ID" />
+                                    <Entry x:Name="GameIDEntry"  />
+                                </StackLayout>
+                                <StackLayout>
+                                    <Label Text="Path"  />
+                                    <Entry x:Name="PathEntry"  HorizontalOptions="FillAndExpand" />
+                                </StackLayout>
+                                <StackLayout>
+                                    <Label Text="Desc"  />
+                                    <ScrollView>
+                                        <Editor x:Name="DescEditor"  />
+                                    </ScrollView>
+                                </StackLayout>
+                                <StackLayout>
+                                    <Label Text="Release Date"  />
+                                    <Entry x:Name="ReleaseDateEntry"  />
+                                </StackLayout>
+                                <StackLayout>
+                                    <Label Text="Developer"  />
+                                    <Entry x:Name="DeveloperEntry"  />
+                                </StackLayout>
+                                <StackLayout>
+                                    <Label Text="Publisher"  />
+                                    <Entry x:Name="PublisherEntry"  />
+                                </StackLayout>
+                                <StackLayout>
+                                    <Label Text="Genre"  />
+                                    <Entry x:Name="GenreEntry"  />
+                                </StackLayout>
+                                <StackLayout>
+                                    <Label Text="Players"  />
+                                    <Entry x:Name="PlayersEntry"  />
+                                </StackLayout>
+                                <StackLayout>
+                                    <Label Text="Language"  />
+                                    <Entry x:Name="LangEntry"  />
+                                </StackLayout>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </ScrollView>
+                </Border>
+
+                <Border Grid.Column="2" VerticalOptions="FillAndExpand" Margin="10,0,0,0" Style="{StaticResource DarkBorderView}" >
+                    <Grid Margin="16" AutomationProperties.IsInAccessibleTree="False" FlowDirection="MatchParent"  >
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.2*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackLayout Grid.Column="0" Grid.Row="0" Margin="0,0,20,0" IsClippedToBounds="True">
+                            <Label Text="Image" />
+                            <Entry x:Name="ImageEntry" />
+                            <Image x:Name="ImageDisplay" Aspect="AspectFit"
+                               VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" />
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="1" Grid.Row="0" IsClippedToBounds="True">
                             <Label Text="Marquee"  />
                             <Entry x:Name="MarqueeEntry"  />
-                            <Image x:Name="MarqueeDisplay" />
+                            <Image x:Name="MarqueeDisplay" Aspect="AspectFit"
+                               VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" />
                         </StackLayout>
-                    </VerticalStackLayout>
-                </Grid>
-            </Border>
 
+                        <StackLayout Grid.ColumnSpan="2" Grid.Row="1" IsClippedToBounds="True" >
+                            <Label Text="Video"  />
+                            <Entry x:Name="VideoEntry"  />
+                            <toolkit:MediaElement x:Name="VideoDisplay" ShouldShowPlaybackControls="False"  
+                                              ShouldAutoPlay="True" ShouldLoopPlayback="True" Aspect="AspectFit"
+                                              VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" />
+                        </StackLayout>
+                    </Grid>
+                </Border>
 
-        </Grid>
-    </StackLayout>
+            </Grid>
+        </StackLayout>
+        <ActivityIndicator x:Name="loadingIndicator" IsRunning="False" IsVisible="False" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" BackgroundColor="Transparent" />
+
+    </Grid>
 </ContentPage>
 
