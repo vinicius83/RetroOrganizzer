@@ -8,7 +8,7 @@ Criando com .NET MAUI
 
 A principal função do App:
   - Ajudar a organizar o XML com edição, limpeza de jogos que não existem mais na pasta
-  - Criação de bin pra chd
+  - Conversão de bin pra chd
   - Integrar com screenscraper e baixar capas e infos (se o cara frances deixar)
   - sync com cartão micro SD
   - etc
