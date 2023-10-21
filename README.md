@@ -2,9 +2,9 @@
 
 !!!!Em desenvolvimento inicial!!!
 
-Organizador de repositórios de retrogames com base nos sistemas Anbernic rodando Emuelec.
+Organizador de repositórios de retrogames.
 
-Baseado em .NET MAUI 
+Criando com .NET MAUI 
 
 A principal função do App:
   - Ajudar a organizar o XML com edição, limpeza de jogos que não existem mais na pasta
