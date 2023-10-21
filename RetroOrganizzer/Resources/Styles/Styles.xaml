@@ -96,13 +96,14 @@
     </Style>
 
     <Style TargetType="Label">
+        
         <Setter Property="FontFamily" Value="OpenSansRegular"/>
         <Setter Property="FontSize"
                 Value="17"/>
         <Setter Property="TextColor" 
             Value="{AppThemeBinding 
                 Dark={StaticResource White}, 
-                Light={StaticResource Black}}"/>
+                Light={StaticResource White}}"/>
     </Style>
 
     <Style TargetType="Label" x:Key="TypographyMeta">
@@ -280,8 +281,7 @@
     </Style>
 
     <Style TargetType="Entry">
-        <Setter Property="WidthRequest" Value="180"/>
-        <Setter Property="TextColor" Value="Black"/>
+        <Setter Property="TextColor" Value="White"/>
     </Style>
 
     <Style TargetType="Frame">
@@ -294,7 +294,8 @@
     </Style>
 
     <Style TargetType="Editor">
-        <Setter Property="TextColor" Value="Black"/>
+        <Setter Property="TextColor" Value="White"/>
+        <Setter Property="HeightRequest" Value="200"/>
     </Style>
 
     <Style TargetType="Slider">
@@ -312,8 +313,7 @@
     </Style>
 
     <Style TargetType="Image">
-        <Setter Property="Aspect" Value="Center"/>
-
+        <Setter Property="Aspect" Value="AspectFit"/>
     </Style>
 
     <Style x:Key="DarkBorderView" TargetType="Border">

@@ -6,9 +6,8 @@
              xmlns:system="clr-namespace:System;assembly=netstandard"
              xmlns:pages="clr-namespace:RetroOrganizzer.Pages"
              x:Class="RetroOrganizzer.Pages.XMLEditor"
-             Padding="10"
              Title="XML"
-             BackgroundColor="White"
+             Style="{StaticResource LightBorderView}"
              Shell.NavBarIsVisible="False">
 
     <ContentPage.Resources>
@@ -22,82 +21,97 @@
         </DataTemplate>
     </ContentPage.Resources>
 
-    <StackLayout BackgroundColor="#DEECF7" Padding="10">
-        <StackLayout Orientation="Horizontal" Spacing="10">
-            <Label Text="Selecione o XML" TextColor="Black" FontSize="16" VerticalOptions="CenterAndExpand"/>
-            <Button Text="Carregar" Clicked="EscolherXML_Clicked" BackgroundColor="#007BFF" TextColor="White" FontSize="16" VerticalOptions="CenterAndExpand"/>
-        </StackLayout>
-        <Label x:Name="lblPastaSelecionada" Text="" TextColor="Black" FontSize="14" Margin="0,10,0,10"/>
+    <StackLayout Padding="10">
+        <!--Selecionar XML-->
+        <Grid Margin="1" IsClippedToBounds="False" HorizontalOptions="FillAndExpand">
+            <VerticalStackLayout Spacing="2">
+                <Border Grid.Column="0"  HorizontalOptions="FillAndExpand" Style="{StaticResource DarkBorderView}" >
+                    <Grid Margin="16" IsClippedToBounds="False">
+                        <StackLayout Orientation="Vertical" Spacing="10">
+                            <Label Text="Selecione o XML" Style="{StaticResource Title1}" TextColor="White" VerticalOptions="CenterAndExpand"/>
+                            <Button Text="Carregar" Clicked="EscolherXML_Clicked" BackgroundColor="#007BFF" TextColor="White" FontSize="16" VerticalOptions="CenterAndExpand"/>
+                            <Label x:Name="lblPastaSelecionada" Text="" TextColor="White" FontSize="14" Margin="0,10,0,10"/>
+                        </StackLayout>
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+        </Grid>
 
-        <Grid>
+        <!--Dados do XML-->
+        <Grid Margin="1" IsClippedToBounds="True" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand">
+
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="3*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <StackLayout Grid.Column="0">
-                <ListView x:Name="listaDeJogos" ItemTemplate="{StaticResource GameCell}" SelectionMode="Single" BackgroundColor="#6D6F71" >
-                </ListView>
-            </StackLayout>
+            <Border Grid.Column="0" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" Style="{StaticResource DarkBorderView}" >
+                <Grid Margin="16" IsClippedToBounds="False">
+                    <VerticalStackLayout Spacing="1">
+                        <StackLayout>
+                            <ListView x:Name="listaDeJogos" ItemTemplate="{StaticResource GameCell}" SelectionMode="Single" >
+                            </ListView>
+                        </StackLayout>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
 
-            <Frame Grid.Column="1" BackgroundColor="#DEECF7" BorderColor="Transparent" />
+            <Border Grid.Column="1" HorizontalOptions="FillAndExpand"  Margin="10,0,0,0" Style="{StaticResource DarkBorderView}" >
+                <Grid Margin="16" IsClippedToBounds="False">
 
-            <StackLayout Grid.Column="2" BackgroundColor="#6D6F71">
-                <StackLayout>
-                    <Label Text="Path" TextColor="White" />
-                    <Entry x:Name="PathEntry" BackgroundColor="White" TextColor="Black" />
-                </StackLayout>
-                <StackLayout>
-                    <Label Text="Name" TextColor="White" />
-                    <Entry x:Name="NameEntry" BackgroundColor="White" TextColor="Black" />
-                </StackLayout>
-                <StackLayout>
-                    <Label Text="Desc" TextColor="White" />
-                    <Editor x:Name="DescEditor" BackgroundColor="White" TextColor="Black" />
-                </StackLayout>
-                <StackLayout>
-                    <Label Text="Release Date" TextColor="White" />
-                    <Entry x:Name="ReleaseDateEntry" BackgroundColor="White" TextColor="Black" />
-                </StackLayout>
-                <StackLayout>
-                    <Label Text="Developer" TextColor="White" />
-                    <Entry x:Name="DeveloperEntry" BackgroundColor="White" TextColor="Black" />
-                </StackLayout>
-                <StackLayout>
-                    <Label Text="Publisher" TextColor="White" />
-                    <Entry x:Name="PublisherEntry" BackgroundColor="White" TextColor="Black" />
-                </StackLayout>
-                <StackLayout>
-                    <Label Text="Genre" TextColor="White" />
-                    <Entry x:Name="GenreEntry" BackgroundColor="White" TextColor="Black" />
-                </StackLayout>
-                <StackLayout>
-                    <Label Text="Players" TextColor="White" />
-                    <Entry x:Name="PlayersEntry" BackgroundColor="White" TextColor="Black" />
-                </StackLayout>
-                <StackLayout>
-                    <Label Text="Language" TextColor="White" />
-                    <Entry x:Name="LangEntry" BackgroundColor="White" TextColor="Black" />
-                </StackLayout>
-            </StackLayout>
+                    <VerticalStackLayout Spacing="1" HorizontalOptions="FillAndExpand">
 
-            <Frame Grid.Column="3" BackgroundColor="#DEECF7" BorderColor="Transparent"/>
+                        <Label Grid.Column="0" Text="Path"  />
+                        <Entry Grid.Column="1" x:Name="PathEntry"  HorizontalOptions="FillAndExpand" />
 
-            <StackLayout Grid.Column="4" BackgroundColor="#6D6F71">
-                <StackLayout>
-                    <Label Text="Image" TextColor="White" />
-                    <Entry x:Name="ImageEntry" BackgroundColor="White" TextColor="Black" />
-                    <Image x:Name="ImageDisplay" />
-                </StackLayout>
-                <StackLayout>
-                    <Label Text="Marquee" TextColor="White" />
-                    <Entry x:Name="MarqueeEntry" BackgroundColor="White" TextColor="Black" />
-                    <Image x:Name="MarqueeDisplay" />
-                </StackLayout>
-            </StackLayout>
+                        <Label Text="Name" />
+                        <Entry x:Name="NameEntry"  />
+
+                        <Label Text="Desc"  />
+                        <ScrollView>
+                            <Editor x:Name="DescEditor"  />
+                        </ScrollView>
+
+                        <Label Text="Release Date"  />
+                        <Entry x:Name="ReleaseDateEntry"  />
+
+                        <Label Text="Developer"  />
+                        <Entry x:Name="DeveloperEntry"  />
+
+                        <Label Text="Publisher"  />
+                        <Entry x:Name="PublisherEntry"  />
+
+                        <Label Text="Genre"  />
+                        <Entry x:Name="GenreEntry"  />
+
+                        <Label Text="Players"  />
+                        <Entry x:Name="PlayersEntry"  />
+
+                        <Label Text="Language"  />
+                        <Entry x:Name="LangEntry"  />
+
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" VerticalOptions="FillAndExpand" Margin="10,0,0,0" Style="{StaticResource DarkBorderView}" >
+                <Grid Margin="16" IsClippedToBounds="False" >
+                    <VerticalStackLayout Spacing="1">
+                        <StackLayout>
+                            <Label Text="Image"  />
+                            <Entry x:Name="ImageEntry"  />
+                            <Image x:Name="ImageDisplay" />
+                        </StackLayout>
+                        <StackLayout>
+                            <Label Text="Marquee"  />
+                            <Entry x:Name="MarqueeEntry"  />
+                            <Image x:Name="MarqueeDisplay" />
+                        </StackLayout>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
 
         </Grid>
     </StackLayout>
