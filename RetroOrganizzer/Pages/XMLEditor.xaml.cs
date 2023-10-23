@@ -1,5 +1,6 @@
+using CommunityToolkit.Maui.Core.Primitives;
+using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Maui.Views;
-using RetroOrganizzer.Converters;
 using System.Xml;
 
 namespace RetroOrganizzer.Pages;
@@ -16,6 +17,66 @@ public partial class XMLEditor : ContentPage
     List<string> nomesDeJogos = new List<string>();
     List<string> jogosNaoEncontrados = new List<string>();
     string xmlFilePath;
+
+
+    private async void EscolherPasta_Clicked(object sender, EventArgs e)
+    {
+        try
+        {
+            loadingIndicator.IsRunning = true;
+            loadingIndicator.IsVisible = true;
+
+            List<string> pastasComGamelist = new List<string>();
+
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+            CancellationToken cancellationToken = cancellationTokenSource.Token;
+
+            var result = await FolderPicker.PickAsync(cancellationToken);
+
+            List<SystemInfo> lstSystemInfo = new List<SystemInfo>();
+
+            if (result != null)
+            {
+                // Obter todas as pastas dentro da pasta selecionada
+                foreach (var folder in Directory.EnumerateDirectories(result.Folder.Path))
+                {
+                    SystemInfo systemInfo = new SystemInfo();
+                    systemInfo.Folder = folder;
+                    systemInfo.System = SystemByFolder(folder);
+
+                    if (File.Exists(Path.Combine(folder, "gamelist.xml")))
+                    {
+                        systemInfo.XMLNotFound = false;
+                    }
+                    else
+                    {
+                        systemInfo.XMLNotFound = true;
+                    }
+
+                    lstSystemInfo.Add(systemInfo);
+
+                }
+
+                listaDeJogos.ItemsSource = lstSystemInfo.OrderBy(x => x.System);
+            }
+            else
+            {
+                lblPastaSelecionada.Text = "Select a folder!.";
+            }
+
+            loadingIndicator.IsRunning = false;
+            loadingIndicator.IsVisible = false;
+        }
+        catch (Exception ex)
+        {
+            // Lida com erros, se houver algum
+            lblPastaSelecionada.Text = $"Erro: {ex.Message}";
+            loadingIndicator.IsRunning = false;
+            loadingIndicator.IsVisible = false;
+        }
+    }
+
+
 
     private async void EscolherXML_Clicked(object sender, EventArgs e)
     {
@@ -73,12 +134,12 @@ public partial class XMLEditor : ContentPage
                 }
                 else
                 {
-                    lblPastaSelecionada.Text = "O arquivo selecionado não é um arquivo XML.";
+                    lblPastaSelecionada.Text = "The selected file isn't a XML.";
                 }
             }
             else
             {
-                lblPastaSelecionada.Text = "Nenhum arquivo selecionado.";
+                lblPastaSelecionada.Text = "Select a XML file!.";
             }
 
             loadingIndicator.IsRunning = false;
@@ -192,7 +253,7 @@ public partial class XMLEditor : ContentPage
         loadingIndicator.IsVisible = false;
 
         //Exibe mensagem de sucesso
-        DisplayAlert("XML Limpo", "O arquivo XML foi limpo com sucesso.", "OK");
+        DisplayAlert("XML Limpo", "The xml file was successfully cleaned.", "OK");
     }
 
     private void listaDeJogos_ItemSelected(object sender, SelectedItemChangedEventArgs e)
@@ -281,7 +342,7 @@ public partial class XMLEditor : ContentPage
 
                 if (selectedGame.IsGameNotFound)
                 {
-                    DisplayAlert("Arquivo do Jogo", $"O arquivo do jogo {selectedGame.Path} não foi encontrado.", "OK");
+                    DisplayAlert("Game Path", $"The game path {selectedGame.Path} was not found!.", "OK");
                 }
             }
         }
@@ -318,4 +379,233 @@ public partial class XMLEditor : ContentPage
         public bool IsGameNotFound { get; set; }
     }
 
+    public class SystemInfo
+    {
+        public string Folder { get; set; }
+        public string System { get; set; }
+        public bool XMLNotFound { get; set; }
+    }
+
+    static string SystemByFolder(string folder)
+    {
+        folder = folder.ToLower();
+
+        switch (folder)
+        {
+            case "wswan":
+                return "Wonderswan";
+            case "wswanc":
+                return "Wonderswan Color";
+            case "x1":
+                return "X1";
+            case "x68000":
+                return "Sharp X68000";
+            case "xash3d_fwgs":
+                return "Xash3D (FWGS)";
+            case "zx81":
+                return "ZX81";
+            case "zxspectrum":
+                return "ZX Spectrum";
+            case "3do":
+                return "3DO";
+            case "amiga500":
+                return "Amiga 500";
+            case "amiga1200":
+                return "Amiga 1200";
+            case "amigacd32":
+                return "Amiga CD32";
+            case "amigacdtv":
+                return "Amiga CDTV";
+            case "amstradcpc":
+                return "Amstrad CPC";
+            case "anbernic":
+                return "Anbernic";
+            case "arcade":
+                return "Arcade";
+            case "atari800":
+                return "Atari 800";
+            case "atari2600":
+                return "Atari 2600";
+            case "atari5200":
+                return "Atari 5200";
+            case "atari7800":
+                return "Atari 7800";
+            case "atarist":
+                return "Atari ST";
+            case "atomiswave":
+                return "Atomiswave";
+            case "c20":
+                return "Commodore 20";
+            case "c64":
+                return "Commodore 64";
+            case "c128":
+                return "Commodore 128";
+            case "cannonball":
+                return "Cannonball";
+            case "cavestory":
+                return "Cave Story";
+            case "cgenius":
+                return "Commander Genius";
+            case "channelf":
+                return "Channel F";
+            case "colecovision":
+                return "Colecovision";
+            case "cplus4":
+                return "Commodore Plus/4";
+            case "cps1":
+                return "CPS-1";
+            case "cps2":
+                return "CPS-2";
+            case "cps3":
+                return "CPS-3";
+            case "daphne":
+                return "Daphne";
+            case "dcim":
+                return "DCIM";
+            case "devilutionx":
+                return "DevilutionX";
+            case "dos":
+                return "DOS";
+            case "dreamcast":
+                return "Dreamcast";
+            case "easyrpg":
+                return "EasyRPG";
+            case "fbneo":
+                return "FinalBurn Neo";
+            case "fds":
+                return "Famicom Disk System";
+            case "gameandwatch":
+                return "Game & Watch";
+            case "gamegear":
+                return "Game Gear";
+            case "gb":
+                return "Game Boy";
+            case "gb2players":
+                return "Game Boy (2 Players)";
+            case "gba":
+                return "Game Boy Advance";
+            case "gbc":
+                return "Game Boy Color";
+            case "gbc2players":
+                return "Game Boy Color (2 Players)";
+            case "gc":
+                return "GameCube";
+            case "gx4000":
+                return "Amstrad GX4000";
+            case "hbmame":
+                return "HBMAME";
+            case "intellivision":
+                return "Intellivision";
+            case "lightgun":
+                return "Lightgun Games";
+            case "lutro":
+                return "Lutro";
+            case "lynx":
+                return "Atari Lynx";
+            case "mame":
+                return "MAME";
+            case "mastersystem":
+                return "Sega Master System";
+            case "megadrive":
+                return "Sega Mega Drive";
+            case "mrboom":
+                return "Mr. Boom";
+            case "msx1":
+                return "MSX";
+            case "msx2":
+                return "MSX2";
+            case "msx2+":
+                return "MSX2+";
+            case "msxturbor":
+                return "MSX Turbo R";
+            case "n64":
+                return "Nintendo 64";
+            case "n64dd":
+                return "Nintendo 64DD";
+            case "naomi":
+                return "Naomi";
+            case "nds":
+                return "Nintendo DS";
+            case "neogeo":
+                return "Neo Geo";
+            case "neogeocd":
+                return "Neo Geo CD";
+            case "nes":
+                return "Nintendo Entertainment System";
+            case "ngp":
+                return "Neo Geo Pocket";
+            case "ngpc":
+                return "Neo Geo Pocket Color";
+            case "o2em":
+                return "Odyssey 2 (O2EM)";
+            case "openbor":
+                return "OpenBOR";
+            case "pc88":
+                return "NEC PC-8801";
+            case "pc98":
+                return "NEC PC-9801";
+            case "pcengine":
+                return "PC Engine";
+            case "pcenginecd":
+                return "PC Engine CD";
+            case "pcfx":
+                return "PC-FX";
+            case "pet":
+                return "Commodore PET";
+            case "pico8":
+                return "PICO-8";
+            case "pokemini":
+                return "Pokemini";
+            case "ports":
+                return "Ports";
+            case "prboom":
+                return "PrBoom";
+            case "ps2":
+                return "PlayStation 2";
+            case "psp":
+                return "PlayStation Portable";
+            case "psx":
+                return "PlayStation";
+            case "pygame":
+                return "Pygame";
+            case "satellaview":
+                return "Satellaview";
+            case "saturn":
+                return "Sega Saturn";
+            case "scummvm":
+                return "ScummVM";
+            case "sdlpop":
+                return "SDL Pop";
+            case "sega32x":
+                return "Sega 32X";
+            case "segacd":
+                return "Sega CD";
+            case "sg1000":
+                return "SG-1000";
+            case "snes":
+                return "Super Nintendo";
+            case "snes-msu1":
+                return "Super Nintendo (MSU-1)";
+            case "solarus":
+                return "Solarus";
+            case "sufami":
+                return "Super Famicom";
+            case "supergrafx":
+                return "PC Engine SuperGrafx";
+            case "thomson":
+                return "Thomson";
+            case "tic80":
+                return "TIC-80";
+            case "tyrquake":
+                return "Tyrquake";
+            case "varcade":
+                return "Virtual Arcade";
+            case "vectrex":
+                return "Vectrex";
+            case "virtualboy":
+                return "Virtual Boy";
+            default:
+                return "Unknow System";
+        }
+    }
 }
