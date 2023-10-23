@@ -13,5 +13,4 @@ A principal função do App:
   - sync com cartão micro SD
   - etc
 
-![image](https://github.com/vinicius83/RetroOrganizzer/assets/34111669/a3e1e1ca-72fa-4050-9ac5-824ce64f1bcd)
-
+![image](https://github.com/vinicius83/RetroOrganizzer/assets/34111669/5dbb9e9e-8f4f-4af2-a1b7-b81c170831c7)
