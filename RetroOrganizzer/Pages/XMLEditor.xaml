@@ -7,7 +7,6 @@
              xmlns:system="clr-namespace:System;assembly=netstandard"
              xmlns:pages="clr-namespace:RetroOrganizzer.Pages"
              x:Class="RetroOrganizzer.Pages.XMLEditor"
-           
              Title="XML"
              Style="{StaticResource LightBorderView}"
              Shell.NavBarIsVisible="False">
@@ -15,19 +14,6 @@
     <ContentPage.Resources>
         <!--Nome e ID para lista de jogos no XML-->
         <DataTemplate x:Key="GameCell">
-            <ViewCell>
-                <StackLayout Orientation="Horizontal">
-                    <Label Text="{Binding System}" VerticalOptions="CenterAndExpand" TextColor="White">
-                        <Label.Triggers>
-                            <DataTrigger TargetType="Label" Binding="{Binding XMLNotFound}" Value="True">
-                                <Setter Property="TextColor" Value="Red" />
-                            </DataTrigger>
-                        </Label.Triggers>
-                    </Label>
-                </StackLayout>
-            </ViewCell>
-        </DataTemplate>
-        <DataTemplate x:Key="SystemCell">
             <ViewCell>
                 <StackLayout Orientation="Horizontal">
                     <Label Text="{Binding Name}" VerticalOptions="CenterAndExpand" TextColor="White">
@@ -40,74 +26,90 @@
                 </StackLayout>
             </ViewCell>
         </DataTemplate>
+        
+        <DataTemplate x:Key="SystemCell">
+            <ViewCell>
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="{Binding System}" VerticalOptions="CenterAndExpand" TextColor="White">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding XMLNotFound}" Value="True">
+                                <Setter Property="TextColor" Value="Red" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </StackLayout>
+            </ViewCell>
+        </DataTemplate>
     </ContentPage.Resources>
 
     <Grid>
         <StackLayout Padding="10">
-            <!--Selecionar XML-->
+            <!--First Row -->
             <Grid Margin="1" IsClippedToBounds="False" HorizontalOptions="FillAndExpand">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
+                <!--Select Folder -->
                 <Border Grid.Column="0"  HorizontalOptions="FillAndExpand" Style="{StaticResource DarkBorderView}" >
                     <Grid Margin="16" IsClippedToBounds="False">
                         <StackLayout Orientation="Vertical" Spacing="10">
-                            <Button Text="Choose your root game folder" Clicked="EscolherPasta_Clicked" BackgroundColor="#007BFF" TextColor="White" FontSize="16" VerticalOptions="CenterAndExpand"/>
-                            <Button Text="Choose a XML File" Clicked="EscolherXML_Clicked" BackgroundColor="#007BFF" TextColor="White" FontSize="16" VerticalOptions="CenterAndExpand"/>
+                            <Button x:Name="ButtonChooseFolder" Text="Choose your root game folder" Clicked="ButtonChooseFolder_Clicked" BackgroundColor="#007BFF" TextColor="White" FontSize="16" VerticalOptions="CenterAndExpand"/>
+                            <Button Text="Choose a XML File" Clicked="ButtonChooseGame_Clicked" BackgroundColor="#007BFF" TextColor="White" FontSize="16" VerticalOptions="CenterAndExpand"/>
                             <Label x:Name="lblPastaSelecionada" Text="" TextColor="White" FontSize="14" Margin="0,10,0,10"/>
                         </StackLayout>
                     </Grid>
                 </Border>
-                <Border Grid.Column="1" HorizontalOptions="FillAndExpand" Style="{StaticResource DarkBorderView}">
+                <Border Grid.Column="1"  Margin="10,0,0,0" HorizontalOptions="FillAndExpand" Style="{StaticResource DarkBorderView}">
                     <Grid Margin="16" IsClippedToBounds="False">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <StackLayout Grid.Row="0"  Orientation="Horizontal" Spacing="10">
-                            <Button Text="Limpar XML" Clicked="LimparXML_Clicked" BackgroundColor="#007BFF" TextColor="White" FontSize="16" VerticalOptions="CenterAndExpand" />
+                            <Button Text="Clean XML" Clicked="ButtonCleanXML_Clicked" BackgroundColor="#007BFF" TextColor="White" FontSize="16" VerticalOptions="CenterAndExpand" />
                         </StackLayout>
                         <StackLayout Grid.Row="1"  Orientation="Horizontal" Spacing="10">
-                            <CheckBox x:Name="LimparArquivosCheckBox" Grid.Column="0" VerticalOptions="CenterAndExpand" />
-                            <Label Grid.Column="1" Text="Excluir arquivos de mídia" VerticalOptions="CenterAndExpand" />
+                            <CheckBox x:Name="CheckBoxCleanMediaFiles" Grid.Column="0" VerticalOptions="CenterAndExpand" />
+                            <Label Grid.Column="1" Text="Delete media files" VerticalOptions="CenterAndExpand" />
                         </StackLayout>
                     </Grid>
                 </Border>
             </Grid>
-            <!--Dados do XML-->
-            <Grid Margin="1" IsClippedToBounds="True" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" >
 
-                
+            <!--Secound Row -->
+            <Grid Margin="1" IsClippedToBounds="True" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" >
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="1.2*" />
                 </Grid.ColumnDefinitions>
-
+                
+                <!--Folders and gamelist -->
                 <Border Grid.Column="0" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" Style="{StaticResource DarkBorderView}">
-                    <Grid>
-                        <!-- Defina as linhas do Grid -->
+                    <Grid Margin="16" AutomationProperties.IsInAccessibleTree="False" FlowDirection="MatchParent"  >
                         <Grid.RowDefinitions>
-                    
-                            <RowDefinition Height="*" />
-       
-                            <RowDefinition Height="*" />
+                            <RowDefinition Height="1*" />
+                            <RowDefinition Height="1*" />
                         </Grid.RowDefinitions>
 
-                        <!-- Lista de Pastas -->
-                        <ListView x:Name="listaPastas" ItemTemplate="{StaticResource SystemCell}" SelectionMode="Single" Grid.Row="0">
-                        </ListView>
+                        <StackLayout Grid.Row="0">
+                            <Label Text="Systems" />
+                            <ListView x:Name="listFolders" ItemTemplate="{StaticResource SystemCell}" SelectionMode="Single"
+                                          BackgroundColor="Black" ItemSelected="Folders_ItemSelected" >
+                            </ListView>
+                        </StackLayout>
 
-                        <!-- Lista de Jogos -->
-                        <ListView x:Name="listaDeJogos" ItemTemplate="{StaticResource GameCell}" SelectionMode="Single" Grid.Row="1">
-                        </ListView>
+                        <StackLayout Grid.Row="1">
+                            <Label Text="Games" />
+                            <ListView x:Name="listGames" ItemTemplate="{StaticResource GameCell}" SelectionMode="Single" 
+                                       BackgroundColor="Black" ItemSelected="Games_ItemSelected">
+                            </ListView>
+                        </StackLayout>
                     </Grid>
                 </Border>
 
-
-
-
+                <!--Game data -->
                 <Border Grid.Column="1" HorizontalOptions="FillAndExpand"  Margin="10,0,0,0" Style="{StaticResource DarkBorderView}" >
                     <ScrollView>
                         <Grid Margin="16" IsClippedToBounds="False">
@@ -159,6 +161,7 @@
                     </ScrollView>
                 </Border>
 
+                <!--Game midea -->
                 <Border Grid.Column="2" VerticalOptions="FillAndExpand" Margin="10,0,0,0" Style="{StaticResource DarkBorderView}" >
                     <Grid Margin="16" AutomationProperties.IsInAccessibleTree="False" FlowDirection="MatchParent"  >
                         <Grid.RowDefinitions>
