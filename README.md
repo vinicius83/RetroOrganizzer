@@ -1,16 +1,17 @@
 # RetroOrganizzer
 
-!!!!Em desenvolvimento inicial!!!
+!!!!In early development!!!
 
-Organizador de repositórios de retrogames.
+Retrogame repository organizer.
 
-Criando com .NET MAUI 
+Building with .NET MAUI
 
-A principal função do App:
-  - Ajudar a organizar o XML com edição, limpeza de jogos que não existem mais na pasta
-  - Conversão de bin pra chd
-  - Integrar com screenscraper e baixar capas e infos (se o cara frances deixar)
-  - sync com cartão micro SD
-  - etc
+The main function of the App:
+  - Help organize XML with editing, cleaning xml nodes that are no longer exists in the folder
+  - Bin to chd conversion
+  - Integrate with screenscraper (if the French guy lets you)
+  - sync with micro SD card
+  - etc.
 
-![image](https://github.com/vinicius83/RetroOrganizzer/assets/34111669/5dbb9e9e-8f4f-4af2-a1b7-b81c170831c7)
+Layout is still a mess, I'll adjust it over time
+![image](https://github.com/vinicius83/RetroOrganizzer/assets/34111669/bd3aeb16-ac5c-4caa-850c-421fe4c223e4)
