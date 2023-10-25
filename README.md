@@ -7,7 +7,7 @@ Retrogame repository organizer.
 Building with .NET MAUI
 
 The main function of the App:
-  - Help organize XML with editing, cleaning xml nodes that are no longer exists in the folder
+  - Helps organize the gamelist.xml with editing, cleaning xml nodes that are no longer exists in the folder
   - Bin to chd conversion
   - Integrate with screenscraper (if the French guy lets you)
   - sync with micro SD card
