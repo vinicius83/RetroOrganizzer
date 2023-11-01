@@ -1,4 +1,6 @@
-﻿namespace RetroOrganizzer
+﻿using Microsoft.Maui.Controls;
+
+namespace RetroOrganizzer
 {
     public partial class AppShell : Shell
     {
@@ -21,6 +23,9 @@
 
         async void OnMenuItemChanged(System.Object sender, CheckedChangedEventArgs e)
         {
+            var radioButton = (RadioButton)sender;
+            selectedRoute = (string)radioButton.Value;
+
             if (!String.IsNullOrEmpty(selectedRoute))
                 await Shell.Current.GoToAsync($"//{selectedRoute}");
         }

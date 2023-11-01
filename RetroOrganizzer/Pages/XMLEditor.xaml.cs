@@ -1,4 +1,3 @@
-using CommunityToolkit.Maui.Core.Primitives;
 using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Maui.Views;
 using System.Xml;
@@ -25,14 +24,11 @@ public partial class XMLEditor : ContentPage
 
         if (!string.IsNullOrEmpty(rootFolder))
         {
-            lblPastaSelecionada.Text = $"Root Folder: {rootFolder}";
-            ButtonChooseFolder.Text = "Change root folder";
             await ChooseFolder(rootFolder);
         }
         else
         {
-            ButtonChooseFolder.Text = "Select your root game folder";
-            lblPastaSelecionada.Text = "Select a folder!.";
+            await DisplayAlert("Game Folder Select", $"Select your game folder in menu settings!", "OK");
         }
     }
 
@@ -48,47 +44,29 @@ public partial class XMLEditor : ContentPage
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
-            var result = await FolderPicker.PickAsync(cancellationToken);
-
             List<SystemInfo> lstSystemInfo = new List<SystemInfo>();
 
-            if (result != null)
+            foreach (var folder in Directory.EnumerateDirectories(rootFolder))
             {
-                // Obter todas as pastas dentro da pasta selecionada
-                foreach (var folder in Directory.EnumerateDirectories(rootFolder))
+                SystemInfo systemInfo = new SystemInfo();
+                systemInfo.Folder = folder;
+                systemInfo.System = SystemByFolder(Path.GetFileName(folder));
+
+                if (File.Exists(Path.Combine(folder, "gamelist.xml")))
                 {
-                    SystemInfo systemInfo = new SystemInfo();
-                    systemInfo.Folder = folder;
-                    systemInfo.System = SystemByFolder(Path.GetFileName(folder));
-
-                    if (File.Exists(Path.Combine(folder, "gamelist.xml")))
-                    {
-                        systemInfo.XMLNotFound = false;
-                    }
-                    else
-                    {
-                        systemInfo.XMLNotFound = true;
-                    }
-
                     lstSystemInfo.Add(systemInfo);
                 }
-
-                listFolders.ItemsSource = lstSystemInfo.OrderBy(x => x.System);
-
-                Preferences.Default.Set("rootFolder", rootFolder);
             }
-            else
-            {
-                lblPastaSelecionada.Text = "Select a folder!.";
-            }
+
+            listFolders.ItemsSource = lstSystemInfo.OrderBy(x => x.System);
+
+            Preferences.Default.Set("rootFolder", rootFolder);
 
             loadingIndicator.IsRunning = false;
             loadingIndicator.IsVisible = false;
         }
         catch (Exception ex)
         {
-            // Lida com erros, se houver algum
-            lblPastaSelecionada.Text = $"Erro: {ex.Message}";
             loadingIndicator.IsRunning = false;
             loadingIndicator.IsVisible = false;
         }
@@ -100,7 +78,7 @@ public partial class XMLEditor : ContentPage
         await ChooseFolder(rootFolder);
     }
 
-    private void Folders_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+    private void System_ItemSelected(object sender, SelectedItemChangedEventArgs e)
     {
         loadingIndicator.IsRunning = true;
         loadingIndicator.IsVisible = true;
@@ -150,12 +128,13 @@ public partial class XMLEditor : ContentPage
 
                 // Exibir os nomes dos jogos em uma lista (ListView)
                 listGames.ItemsSource = gamesInfo.OrderBy(x => x.Name);
+                LabelSelectedSystem.Text = $"{selectedSystem.System}";
 
-                lblPastaSelecionada.Text = $"XML loaded successfully: {xmlFilePath}";
+                ShowStackLayoutGames();
             }
             else
             {
-                lblPastaSelecionada.Text = "The selected folder doesn't have a gamelist.xml file.";
+                //LabelSelectedFolder.Text = "The selected folder doesn't have a gamelist.xml file.";
             }
         }
 
@@ -192,7 +171,6 @@ public partial class XMLEditor : ContentPage
 
                     foreach (XmlNode gameNode in gameNodes)
                     {
-                        //string id = gameNode.Attributes["id"]?.Value;
                         string path = gameNode.SelectSingleNode("path")?.InnerText;
                         string name = gameNode.SelectSingleNode("name")?.InnerText;
                         string id = gameNode.Attributes["id"]?.Value;
@@ -216,16 +194,16 @@ public partial class XMLEditor : ContentPage
                     // Adicione o manipulador de eventos para o evento ItemSelected
                     listGames.ItemSelected += Games_ItemSelected;
 
-                    lblPastaSelecionada.Text = $"XML carregado com sucesso: {xmlFilePath}";
+                    //LabelSelectedFolder.Text = $"XML carregado com sucesso: {xmlFilePath}";
                 }
                 else
                 {
-                    lblPastaSelecionada.Text = "The selected file isn't a XML.";
+                    //LabelSelectedFolder.Text = "The selected file isn't a XML.";
                 }
             }
             else
             {
-                lblPastaSelecionada.Text = "Select a XML file!.";
+                //LabelSelectedFolder.Text = "Select a XML file!.";
             }
 
             loadingIndicator.IsRunning = false;
@@ -234,7 +212,7 @@ public partial class XMLEditor : ContentPage
         catch (Exception ex)
         {
             // Lida com erros, se houver algum
-            lblPastaSelecionada.Text = $"Erro: {ex.Message}";
+            //LabelSelectedFolder.Text = $"Erro: {ex.Message}";
             loadingIndicator.IsRunning = false;
             loadingIndicator.IsVisible = false;
         }
@@ -252,7 +230,7 @@ public partial class XMLEditor : ContentPage
         //Se listFolders estiver selecionado
         if (listFolders.SelectedItem != null)
         {
-            SystemInfo systemInfo = listFolders.SelectedItem as SystemInfo ;
+            SystemInfo systemInfo = listFolders.SelectedItem as SystemInfo;
             string selectedFolder = systemInfo.Folder;
             xmlFilePath = Path.Combine(selectedFolder, "gamelist.xml");
         }
@@ -294,7 +272,7 @@ public partial class XMLEditor : ContentPage
                 PathEntry.Text = path;
                 NameEntry.Text = name;
                 DescEditor.Text = desc;
-                if (releasedate != null)
+                if (!string.IsNullOrEmpty(releasedate))
                 {
                     ReleaseDateEntry.Text = DateTime.ParseExact(releasedate, "yyyyMMddTHHmmss", null).ToString("dd/MM/yyyy");
                 }
@@ -346,13 +324,18 @@ public partial class XMLEditor : ContentPage
 
                 if (selectedGame.IsGameNotFound)
                 {
-                    DisplayAlert("Game Path", $"The game path {selectedGame.Path} was not found!.", "OK");
+                    DisplayAlert("Game not found", $"The game {selectedGame.Path} was not found!.", "OK");
                 }
             }
         }
 
         loadingIndicator.IsRunning = false;
         loadingIndicator.IsVisible = false;
+    }
+
+    private void ButtonShowSystems_Clicked(object sender, EventArgs e)
+    {
+        ShowStackLayoutSystems();
     }
 
     private void ButtonCleanXML_Clicked(object sender, EventArgs e)
@@ -477,6 +460,33 @@ public partial class XMLEditor : ContentPage
         VideoDisplay.Source = null;
     }
 
+
+    private async void ShowStackLayoutGames()
+    {
+        LimpaCampos();
+
+        StackLayoutSystemSelected.IsVisible = true;
+
+        await StackLayoutSystems.TranslateTo(0, -StackLayoutSystems.Height, 300); // Move para cima
+        StackLayoutSystems.IsVisible = false;
+
+        StackLayoutGames.IsVisible = true;
+        await StackLayoutGames.TranslateTo(0, 0, 300); // Move para baixo
+    }
+
+    private async void ShowStackLayoutSystems()
+    {
+        LimpaCampos();
+
+        StackLayoutSystemSelected.IsVisible = false;
+
+        await StackLayoutGames.TranslateTo(0, -StackLayoutGames.Height, 300); // Move para cima
+        StackLayoutGames.IsVisible = false;
+
+        StackLayoutSystems.IsVisible = true;
+        await StackLayoutSystems.TranslateTo(0, 0, 300); // Move para baixo
+    }
+
     public class GameInfo
     {
         public string GameID { get; set; }
@@ -489,7 +499,6 @@ public partial class XMLEditor : ContentPage
     {
         public string Folder { get; set; }
         public string System { get; set; }
-        public bool XMLNotFound { get; set; }
     }
 
     static string SystemByFolder(string folder)
