@@ -72,13 +72,7 @@
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <StackLayout Grid.Row="0"  Orientation="Horizontal" Spacing="10">
-                            <Button Text="Clean XML" Clicked="ButtonCleanXML_Clicked" BackgroundColor="#007BFF" TextColor="White" VerticalOptions="CenterAndExpand" />
-                        </StackLayout>
-                        <StackLayout Grid.Row="1"  Orientation="Horizontal" Spacing="10">
-                            <CheckBox x:Name="CheckBoxCleanMediaFiles" Grid.Column="0" VerticalOptions="CenterAndExpand" />
-                            <Label Grid.Column="1" Text="Delete media files" VerticalOptions="CenterAndExpand" />
-                        </StackLayout>
+                       
                     </Grid>
                 </Border>
             </Grid>
@@ -111,6 +105,17 @@
                             <ListView x:Name="listGames" ItemTemplate="{StaticResource GameCell}" SelectionMode="Single" 
                                        BackgroundColor="Black" ItemSelected="Games_ItemSelected">
                             </ListView>
+
+                            <StackLayout x:Name="StackCleanGames" Orientation="Vertical" Spacing="10" IsVisible="false">
+                                <Label Text="*games in XML that were not found " TextColor="Red" FontSize="Micro" />
+                                <Button Text="Clean games not found in XML" Clicked="ButtonCleanXML_Clicked" BackgroundColor="#007BFF" 
+                                        TextColor="White" HorizontalOptions="FillAndExpand" />
+                                <StackLayout  Orientation="Horizontal" Spacing="10">
+                                    <CheckBox x:Name="CheckBoxCleanMediaFiles" Grid.Column="0" VerticalOptions="CenterAndExpand" IsChecked="True" />
+                                    <Label Grid.Column="1" Text="Also delete the media not used" VerticalOptions="CenterAndExpand" FontSize="Micro" />
+                                </StackLayout>
+                            </StackLayout>
+
                         </StackLayout>
                     </Grid>
                 </Border>

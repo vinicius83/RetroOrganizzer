@@ -120,13 +120,30 @@ public partial class XMLEditor : ContentPage
 
                         string gamePath = path.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
                         gamePath = Path.Combine(xmlDirectory, gamePath);
-                        game.IsGameNotFound = File.Exists(gamePath) ? false : true;
+
+
+                        if (File.Exists(gamePath))
+                        {
+                            game.IsGameNotFound = false;
+                        }
+                        else
+                        {
+                            game.IsGameNotFound = true;
+                        }
 
                         gamesInfo.Add(game);
                     }
                 }
 
-                // Exibir os nomes dos jogos em uma lista (ListView)
+                if (gamesInfo.Any(x => x.IsGameNotFound == true))
+                {
+                    StackCleanGames.IsVisible = true;
+                }
+                else
+                {
+                    StackCleanGames.IsVisible = false;
+                }
+
                 listGames.ItemsSource = gamesInfo.OrderBy(x => x.Name);
                 LabelSelectedSystem.Text = $"{selectedSystem.System}";
 
@@ -433,6 +450,7 @@ public partial class XMLEditor : ContentPage
         //Limpa os campos
         LimpaCampos();
 
+        StackCleanGames.IsVisible = false;
         loadingIndicator.IsRunning = false;
         loadingIndicator.IsVisible = false;
 
