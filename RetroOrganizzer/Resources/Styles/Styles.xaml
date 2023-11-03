@@ -283,7 +283,7 @@
     <Style TargetType="Entry">
         <Setter Property="TextColor" Value="White"/>
     </Style>
-
+    
     <Style TargetType="Frame">
         <Setter Property="HasShadow" Value="False"/>
     </Style>

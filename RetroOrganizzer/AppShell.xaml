@@ -78,16 +78,21 @@
                     </Style>
                 </Grid.Resources>
 
-
                 <RadioButton Value="xmleditor" IsChecked="True" Grid.Row="0"
                          CheckedChanged="OnMenuItemChanged">
                     <RadioButton.Content>
                         <Image Source="xml.png" WidthRequest="45" HeightRequest="45" Aspect="AspectFit">
-
                         </Image>
                     </RadioButton.Content>
                 </RadioButton>
 
+                <RadioButton Value="settings" IsChecked="False" Grid.Row="1"
+                    CheckedChanged="OnMenuItemChanged">
+                    <RadioButton.Content>
+                        <Image Source="settings.png" WidthRequest="45" HeightRequest="45" Aspect="AspectFit">
+                        </Image>
+                    </RadioButton.Content>
+                </RadioButton>
 
                 <Image Source="logout.png"  Grid.Row="7"  WidthRequest="45" HeightRequest="45" Aspect="AspectFit">
                     <Image.GestureRecognizers>
@@ -100,6 +105,9 @@
     </Shell.FlyoutContentTemplate>
     <FlyoutItem Title="XML Editor" Route="xmleditor">
         <ShellContent ContentTemplate="{DataTemplate pages:XMLEditor}" />
+    </FlyoutItem>
+    <FlyoutItem Title="Settings" Route="settings">
+        <ShellContent ContentTemplate="{DataTemplate pages:Settings}" />
     </FlyoutItem>
 
 
