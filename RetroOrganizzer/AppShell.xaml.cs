@@ -1,4 +1,6 @@
 ﻿using Microsoft.Maui.Controls;
+using RetroOrganizzer.Helper;
+using System.Security.Cryptography;
 
 namespace RetroOrganizzer
 {
@@ -7,6 +9,11 @@ namespace RetroOrganizzer
         public AppShell()
         {
             InitializeComponent();
+
+            //string key = Cryptography.GenerateKey();
+            //string key = Cryptography.key();
+            //string crip = Cryptography.EncryptString("", key);
+            //string decrip = Cryptography.DecryptString(crip, key);
         }
 
         private string selectedRoute;

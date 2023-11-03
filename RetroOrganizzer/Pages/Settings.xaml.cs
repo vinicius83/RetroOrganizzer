@@ -1,18 +1,19 @@
 using CommunityToolkit.Maui.Storage;
-using CommunityToolkit.Maui.Views;
-using System.Xml;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
+using RetroOrganizzer.Services;
 using static RetroOrganizzer.Pages.XMLEditor;
 
 namespace RetroOrganizzer.Pages;
 
 public partial class Settings : ContentPage
 {
-	public Settings()
-	{
-		InitializeComponent();
+    public Settings()
+    {
+        InitializeComponent();
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
 
@@ -43,18 +44,19 @@ public partial class Settings : ContentPage
             loadingIndicator.IsRunning = true;
             loadingIndicator.IsVisible = true;
 
-            List<string> pastasComGamelist = new List<string>();
+            List<string> pastasComGamelist = new();
 
-            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+            CancellationTokenSource cancellationTokenSource = new();
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
             var result = await FolderPicker.PickAsync(cancellationToken);
 
-            List<SystemInfo> lstSystemInfo = new List<SystemInfo>();
+            List<SystemInfo> lstSystemInfo = new();
 
             if (result != null)
             {
                 Preferences.Default.Set("rootFolder", rootFolder);
+                GetSystemDataAsync();
             }
             else
             {
@@ -72,5 +74,27 @@ public partial class Settings : ContentPage
         }
     }
 
+    private async void GetSystemDataAsync()
+    {
+        var service = new ScreenScraperService();
+        string SystemList = await service.GetSystemListAsync();
+        JObject json = JObject.Parse(SystemList);
 
+        //////Keep only the "systemes" section in the config
+        //JToken jsonSystems = json["response"]["systemes"];
+
+        ////Remove "medias" from "systemes" if it exists (medias returns data with passaword dev)
+        //if (jsonSystems != null)
+        //{
+        //    if (jsonSystems["medias"] is JArray mediasArray)
+        //    {
+        //        mediasArray.Parent.Remove();
+        //    }
+        //}
+
+        //string modifiedJson = json.ToString();
+
+        ////// Saves the config in a physical json file called "systemList.json"
+        //File.WriteAllText("systemList.json", modifiedJson.ToString());
+    }
 }

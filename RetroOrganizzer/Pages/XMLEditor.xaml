@@ -95,7 +95,7 @@
 
                         <StackLayout x:Name="StackLayoutSystems">
                             <Label Text="Systems" />
-                            <ListView x:Name="listFolders" ItemTemplate="{StaticResource SystemCell}" SelectionMode="Single"
+                            <ListView x:Name="listSystems" ItemTemplate="{StaticResource SystemCell}" SelectionMode="Single"
                                           BackgroundColor="Black" ItemSelected="System_ItemSelected" >
                             </ListView>
                         </StackLayout>

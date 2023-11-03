@@ -51,7 +51,12 @@
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Maui" Version="6.0.0" />
 		<PackageReference Include="CommunityToolkit.Maui.MediaElement" Version="2.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="8.0.0-rc.2.23480.2" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Xml" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>

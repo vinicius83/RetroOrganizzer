@@ -1,14 +1,13 @@
 using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Maui.Views;
+using Microsoft.Extensions.Configuration;
+
 using System.Xml;
 
 namespace RetroOrganizzer.Pages;
 
 public partial class XMLEditor : ContentPage
 {
-    private static readonly int REQUEST_DIRECTORY = 1;
-    //List<string> nomesDeJogos = new List<string>();
-    //List<string> jogosNaoEncontrados = new List<string>();
     string xmlFilePath;
 
     public XMLEditor()
@@ -24,7 +23,7 @@ public partial class XMLEditor : ContentPage
 
         if (!string.IsNullOrEmpty(rootFolder))
         {
-            await ChooseFolder(rootFolder);
+            await ListSystemsByFolder(rootFolder);
         }
         else
         {
@@ -32,25 +31,25 @@ public partial class XMLEditor : ContentPage
         }
     }
 
-    private async Task ChooseFolder(string rootFolder)
+    private async Task ListSystemsByFolder(string rootFolder)
     {
         try
         {
             loadingIndicator.IsRunning = true;
             loadingIndicator.IsVisible = true;
 
-            List<string> pastasComGamelist = new List<string>();
-
-            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+            CancellationTokenSource cancellationTokenSource = new();
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
-            List<SystemInfo> lstSystemInfo = new List<SystemInfo>();
+            List<SystemInfo> lstSystemInfo = new();
 
             foreach (var folder in Directory.EnumerateDirectories(rootFolder))
             {
-                SystemInfo systemInfo = new SystemInfo();
-                systemInfo.Folder = folder;
-                systemInfo.System = SystemByFolder(Path.GetFileName(folder));
+                SystemInfo systemInfo = new()
+                {
+                    Folder = folder,
+                    System = SystemByFolder(Path.GetFileName(folder))
+                };
 
                 if (File.Exists(Path.Combine(folder, "gamelist.xml")))
                 {
@@ -58,7 +57,7 @@ public partial class XMLEditor : ContentPage
                 }
             }
 
-            listFolders.ItemsSource = lstSystemInfo.OrderBy(x => x.System);
+            listSystems.ItemsSource = lstSystemInfo.OrderBy(x => x.System);
 
             Preferences.Default.Set("rootFolder", rootFolder);
 
@@ -69,13 +68,8 @@ public partial class XMLEditor : ContentPage
         {
             loadingIndicator.IsRunning = false;
             loadingIndicator.IsVisible = false;
+            await DisplayAlert("Error", $"Error: {ex.Message}", "OK");
         }
-    }
-
-    private async void ButtonChooseFolder_Clicked(object sender, EventArgs e)
-    {
-        string rootFolder = Preferences.Default.Get("rootFolder", "");
-        await ChooseFolder(rootFolder);
     }
 
     private void System_ItemSelected(object sender, SelectedItemChangedEventArgs e)
@@ -93,34 +87,34 @@ public partial class XMLEditor : ContentPage
             string selectedFolder = selectedSystem.Folder;
 
             string xmlFilePath = Path.Combine(selectedFolder, "gamelist.xml");
+            string xmlDirectory = Path.GetDirectoryName(xmlFilePath);
 
             if (File.Exists(xmlFilePath))
             {
-                // Carregar o arquivo XML
-                XmlDocument xmlDoc = new XmlDocument();
-                xmlDoc.Load(xmlFilePath);
+                // Load configuration from XML file
+                var config = new ConfigurationBuilder()
+                 .SetBasePath(Directory.GetCurrentDirectory())
+                 .AddXmlFile(xmlFilePath)
+                 .Build();
 
-                string xmlDirectory = Path.GetDirectoryName(xmlFilePath);
+                // Extract game names from configuration
+                var gameSections = config.GetSection("game").GetChildren();
 
-                // Extrair os nomes dos jogos do XML
-                XmlNodeList gameNodes = xmlDoc.SelectNodes("/gameList/game");
+                // List to show in ListView
+                List<GameInfo> gamesInfo = new();
 
-                List<GameInfo> gamesInfo = new List<GameInfo>();
-
-                foreach (XmlNode gameNode in gameNodes)
+                foreach (var gameSection in gameSections)
                 {
-                    //string id = gameNode.Attributes["id"]?.Value;
-                    string path = gameNode.SelectSingleNode("path")?.InnerText;
-                    string name = gameNode.SelectSingleNode("name")?.InnerText;
-                    string id = gameNode.Attributes["id"]?.Value;
+                    string path = gameSection["path"];
+                    string name = gameSection["name"];
+                    string id = gameSection["id"];
 
                     if (!string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(name))
                     {
-                        GameInfo game = new GameInfo { Path = path, Name = name, GameID = id };
+                        GameInfo game = new() { Path = path, Name = name, GameID = id };
 
-                        string gamePath = path.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
+                        string gamePath = path[2..].Replace("/", Path.DirectorySeparatorChar.ToString());
                         gamePath = Path.Combine(xmlDirectory, gamePath);
-
 
                         if (File.Exists(gamePath))
                         {
@@ -135,6 +129,7 @@ public partial class XMLEditor : ContentPage
                     }
                 }
 
+                //Show option to clean games
                 if (gamesInfo.Any(x => x.IsGameNotFound == true))
                 {
                     StackCleanGames.IsVisible = true;
@@ -151,16 +146,15 @@ public partial class XMLEditor : ContentPage
             }
             else
             {
-                //LabelSelectedFolder.Text = "The selected folder doesn't have a gamelist.xml file.";
+                DisplayAlert("System Select", $"The selected system doesn't have a gamelist.xml file.", "OK");
             }
         }
 
         loadingIndicator.IsRunning = false;
         loadingIndicator.IsVisible = false;
-
     }
 
-    private async void ButtonChooseGame_Clicked(object sender, EventArgs e)
+    private async void ListFolders(object sender, EventArgs e)
     {
         try
         {
@@ -176,7 +170,7 @@ public partial class XMLEditor : ContentPage
                 if (Path.GetExtension(xmlFilePath) == ".xml")
                 {
                     // Carregar o arquivo XML
-                    XmlDocument xmlDoc = new XmlDocument();
+                    XmlDocument xmlDoc = new();
                     xmlDoc.Load(xmlFilePath);
 
                     string xmlDirectory = Path.GetDirectoryName(xmlFilePath);
@@ -184,7 +178,7 @@ public partial class XMLEditor : ContentPage
                     // Extrair os nomes dos jogos do XML
                     XmlNodeList gameNodes = xmlDoc.SelectNodes("/gameList/game");
 
-                    List<GameInfo> gamesInfo = new List<GameInfo>();
+                    List<GameInfo> gamesInfo = new();
 
                     foreach (XmlNode gameNode in gameNodes)
                     {
@@ -194,11 +188,14 @@ public partial class XMLEditor : ContentPage
 
                         if (!string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(name))
                         {
-                            GameInfo game = new GameInfo { Path = path, Name = name, GameID = id };
+                            GameInfo game = new() { Path = path, Name = name, GameID = id };
+                            //GameInfo game = new GameInfo { Path = path, Name = name, GameID = id };
 
-                            string gamePath = path.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
+
+
+                            string gamePath = path[2..].Replace("/", Path.DirectorySeparatorChar.ToString());
                             gamePath = Path.Combine(xmlDirectory, gamePath);
-                            game.IsGameNotFound = File.Exists(gamePath) ? false : true;
+                            game.IsGameNotFound = !File.Exists(gamePath);
 
                             gamesInfo.Add(game);
                         }
@@ -228,10 +225,9 @@ public partial class XMLEditor : ContentPage
         }
         catch (Exception ex)
         {
-            // Lida com erros, se houver algum
-            //LabelSelectedFolder.Text = $"Erro: {ex.Message}";
             loadingIndicator.IsRunning = false;
             loadingIndicator.IsVisible = false;
+            await DisplayAlert("Error", $"Error: {ex.Message}", "OK");
         }
     }
 
@@ -244,10 +240,10 @@ public partial class XMLEditor : ContentPage
         loadingIndicator.IsVisible = true;
 
 
-        //Se listFolders estiver selecionado
-        if (listFolders.SelectedItem != null)
+        //Se listSystems estiver selecionado
+        if (listSystems.SelectedItem != null)
         {
-            SystemInfo systemInfo = listFolders.SelectedItem as SystemInfo;
+            SystemInfo systemInfo = listSystems.SelectedItem as SystemInfo;
             string selectedFolder = systemInfo.Folder;
             xmlFilePath = Path.Combine(selectedFolder, "gamelist.xml");
         }
@@ -265,7 +261,7 @@ public partial class XMLEditor : ContentPage
 
             string xpathQuery = $"//game[path=\"{selectedGamePath}\"]"; ;
 
-            XmlDocument xmlDoc = new XmlDocument();
+            XmlDocument xmlDoc = new();
             xmlDoc.Load(xmlFilePath);
 
             XmlNode gameNode = xmlDoc.SelectSingleNode(xpathQuery);
@@ -309,7 +305,7 @@ public partial class XMLEditor : ContentPage
 
                 if (imageValue != null)
                 {
-                    imageValue = imageValue.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
+                    imageValue = imageValue[2..].Replace("/", Path.DirectorySeparatorChar.ToString());
                     imageValue = Path.Combine(xmlDirectory, imageValue);
                     if (File.Exists(imageValue))
                     {
@@ -319,7 +315,7 @@ public partial class XMLEditor : ContentPage
 
                 if (marqueeValue != null)
                 {
-                    marqueeValue = marqueeValue.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
+                    marqueeValue = marqueeValue[2..].Replace("/", Path.DirectorySeparatorChar.ToString());
                     marqueeValue = Path.Combine(xmlDirectory, marqueeValue);
                     if (File.Exists(marqueeValue))
                     {
@@ -329,7 +325,7 @@ public partial class XMLEditor : ContentPage
 
                 if (videoValue != null)
                 {
-                    videoValue = videoValue.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
+                    videoValue = videoValue[2..].Replace("/", Path.DirectorySeparatorChar.ToString());
                     videoValue = Path.Combine(xmlDirectory, videoValue);
                     if (File.Exists(videoValue))
                     {
@@ -357,105 +353,111 @@ public partial class XMLEditor : ContentPage
 
     private void ButtonCleanXML_Clicked(object sender, EventArgs e)
     {
-        loadingIndicator.IsRunning = true;
-        loadingIndicator.IsVisible = true;
-
-        List<GameInfo> jogosSemPath = listGames.ItemsSource.Cast<GameInfo>().Where(x => x.IsGameNotFound == true).ToList();
-        List<GameInfo> jogosComPath = listGames.ItemsSource.Cast<GameInfo>().Where(x => x.IsGameNotFound == false).ToList();
-
-        XmlDocument xmlDoc = new XmlDocument();
-        xmlDoc.Load(xmlFilePath);
-
-        //Busca os jogos que não possuem mais paths
-        foreach (GameInfo game in jogosSemPath)
+        try
         {
-            string xpathQuery = $"//game[path=\"{game.Path}\"]";
-            XmlNode gameNode = xmlDoc.SelectSingleNode(xpathQuery);
+            loadingIndicator.IsRunning = true;
+            loadingIndicator.IsVisible = true;
 
-            //Deleta os jogos que não possuem mais paths
-            if (gameNode != null)
+            List<GameInfo> jogosSemPath = listGames.ItemsSource.Cast<GameInfo>().Where(x => x.IsGameNotFound == true).ToList();
+            List<GameInfo> jogosComPath = listGames.ItemsSource.Cast<GameInfo>().Where(x => x.IsGameNotFound == false).ToList();
+
+            XmlDocument xmlDoc = new();
+            xmlDoc.Load(xmlFilePath);
+
+            //Busca os jogos que não possuem mais paths
+            foreach (GameInfo game in jogosSemPath)
             {
-                gameNode.ParentNode.RemoveChild(gameNode);
-            }
+                string xpathQuery = $"//game[path=\"{game.Path}\"]";
+                XmlNode gameNode = xmlDoc.SelectSingleNode(xpathQuery);
 
-            if (CheckBoxCleanMediaFiles.IsChecked)
-            {
-                //Consulta por outros nós com o mesmo id exceto o que está sendo deletado (removido acima)
-                List<XmlNode> MesmoJogoOutrosNodes = xmlDoc.SelectNodes($"//game[@id=\"{game.GameID}\"]")
-                                                       .Cast<XmlNode>()
-                                                       .ToList();
+                //Deleta os jogos que não possuem mais paths
+                gameNode?.ParentNode.RemoveChild(gameNode);
 
-                if (MesmoJogoOutrosNodes.Count > 0)
+                if (CheckBoxCleanMediaFiles.IsChecked)
                 {
-                    //Filtro a lista MesmoJogoOutrosNodes com a lista jogosComPath (que tenham path válidos)
-                    List<XmlNode> nodesToRemoveWithMatchingName = MesmoJogoOutrosNodes
-                                                        .Where(x => jogosComPath.Any(y => y.GameID == x.SelectSingleNode("id")?.InnerText))
-                                                        .ToList();
+                    //Consulta por outros nós com o mesmo id exceto o que está sendo deletado (removido acima)
+                    List<XmlNode> MesmoJogoOutrosNodes = xmlDoc.SelectNodes($"//game[@id=\"{game.GameID}\"]")
+                                                           .Cast<XmlNode>()
+                                                           .ToList();
 
-                    if (nodesToRemoveWithMatchingName.Count > 0)
+                    if (MesmoJogoOutrosNodes.Count > 0)
                     {
-                        //Midia referente ao jogo deletado
-                        string imageValue = gameNode.SelectSingleNode("image")?.InnerText;
-                        string marqueeValue = gameNode.SelectSingleNode("marquee")?.InnerText;
-                        string videoValue = gameNode.SelectSingleNode("video")?.InnerText;
+                        //Filtro a lista MesmoJogoOutrosNodes com a lista jogosComPath (que tenham path válidos)
+                        List<XmlNode> nodesToRemoveWithMatchingName = MesmoJogoOutrosNodes
+                                                            .Where(x => jogosComPath.Any(y => y.GameID == x.SelectSingleNode("id")?.InnerText))
+                                                            .ToList();
 
-                        if (!nodesToRemoveWithMatchingName.Any(node => node.SelectSingleNode("image")?.InnerText == imageValue))
+                        if (nodesToRemoveWithMatchingName.Count > 0)
                         {
-                            if (imageValue != null)
+                            //Midia referente ao jogo deletado
+                            string imageValue = gameNode.SelectSingleNode("image")?.InnerText;
+                            string marqueeValue = gameNode.SelectSingleNode("marquee")?.InnerText;
+                            string videoValue = gameNode.SelectSingleNode("video")?.InnerText;
+
+                            if (!nodesToRemoveWithMatchingName.Any(node => node.SelectSingleNode("image")?.InnerText == imageValue))
                             {
-                                imageValue = imageValue.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
-                                imageValue = Path.Combine(Path.GetDirectoryName(xmlFilePath), imageValue);
-                                if (File.Exists(imageValue))
+                                if (imageValue != null)
                                 {
-                                    File.Delete(imageValue);
+                                    imageValue = imageValue[2..].Replace("/", Path.DirectorySeparatorChar.ToString());
+                                    imageValue = Path.Combine(Path.GetDirectoryName(xmlFilePath), imageValue);
+                                    if (File.Exists(imageValue))
+                                    {
+                                        File.Delete(imageValue);
+                                    }
                                 }
                             }
-                        }
 
-                        if (!nodesToRemoveWithMatchingName.Any(node => node.SelectSingleNode("marquee")?.InnerText == marqueeValue))
-                        {
-                            if (marqueeValue != null)
+                            if (!nodesToRemoveWithMatchingName.Any(node => node.SelectSingleNode("marquee")?.InnerText == marqueeValue))
                             {
-                                marqueeValue = marqueeValue.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
-                                marqueeValue = Path.Combine(Path.GetDirectoryName(xmlFilePath), marqueeValue);
-                                if (File.Exists(marqueeValue))
+                                if (marqueeValue != null)
                                 {
-                                    File.Delete(marqueeValue);
+                                    marqueeValue = marqueeValue[2..].Replace("/", Path.DirectorySeparatorChar.ToString());
+                                    marqueeValue = Path.Combine(Path.GetDirectoryName(xmlFilePath), marqueeValue);
+                                    if (File.Exists(marqueeValue))
+                                    {
+                                        File.Delete(marqueeValue);
+                                    }
                                 }
                             }
-                        }
 
-                        if (!nodesToRemoveWithMatchingName.Any(node => node.SelectSingleNode("video")?.InnerText == videoValue))
-                        {
-                            if (videoValue != null)
+                            if (!nodesToRemoveWithMatchingName.Any(node => node.SelectSingleNode("video")?.InnerText == videoValue))
                             {
-                                videoValue = videoValue.Substring(2).Replace("/", Path.DirectorySeparatorChar.ToString());
-                                videoValue = Path.Combine(Path.GetDirectoryName(xmlFilePath), videoValue);
-                                if (File.Exists(videoValue))
+                                if (videoValue != null)
                                 {
-                                    File.Delete(videoValue);
+                                    videoValue = videoValue[2..].Replace("/", Path.DirectorySeparatorChar.ToString());
+                                    videoValue = Path.Combine(Path.GetDirectoryName(xmlFilePath), videoValue);
+                                    if (File.Exists(videoValue))
+                                    {
+                                        File.Delete(videoValue);
+                                    }
                                 }
                             }
                         }
                     }
                 }
+
+                listGames.ItemsSource = listGames.ItemsSource.Cast<GameInfo>().Where(x => x.Path != game.Path).ToList();
+
+                //Salva o arquivo XML
+                xmlDoc.Save(xmlFilePath);
             }
 
-            listGames.ItemsSource = listGames.ItemsSource.Cast<GameInfo>().Where(x => x.Path != game.Path).ToList();
+            //Limpa os campos
+            LimpaCampos();
 
-            //Salva o arquivo XML
-            xmlDoc.Save(xmlFilePath);
+            StackCleanGames.IsVisible = false;
+            loadingIndicator.IsRunning = false;
+            loadingIndicator.IsVisible = false;
+
+            //Exibe mensagem de sucesso
+            DisplayAlert("XML Limpo", "The xml file was successfully cleaned.", "OK");
         }
-
-        //Limpa os campos
-        LimpaCampos();
-
-        StackCleanGames.IsVisible = false;
-        loadingIndicator.IsRunning = false;
-        loadingIndicator.IsVisible = false;
-
-        //Exibe mensagem de sucesso
-        DisplayAlert("XML Limpo", "The xml file was successfully cleaned.", "OK");
+        catch (Exception ex)
+        {
+            loadingIndicator.IsRunning = false;
+            loadingIndicator.IsVisible = false;
+            DisplayAlert("Error", $"Error: {ex.Message}", "OK");
+        }
     }
 
     private void LimpaCampos()
@@ -523,222 +525,115 @@ public partial class XMLEditor : ContentPage
     {
         folder = folder.ToLower();
 
-        switch (folder)
+        return folder switch
         {
-            case "wswan":
-                return "Wonderswan";
-            case "wswanc":
-                return "Wonderswan Color";
-            case "x1":
-                return "X1";
-            case "x68000":
-                return "Sharp X68000";
-            case "xash3d_fwgs":
-                return "Xash3D (FWGS)";
-            case "zx81":
-                return "ZX81";
-            case "zxspectrum":
-                return "ZX Spectrum";
-            case "3do":
-                return "3DO";
-            case "amiga500":
-                return "Amiga 500";
-            case "amiga1200":
-                return "Amiga 1200";
-            case "amigacd32":
-                return "Amiga CD32";
-            case "amigacdtv":
-                return "Amiga CDTV";
-            case "amstradcpc":
-                return "Amstrad CPC";
-            case "anbernic":
-                return "Anbernic";
-            case "arcade":
-                return "Arcade";
-            case "atari800":
-                return "Atari 800";
-            case "atari2600":
-                return "Atari 2600";
-            case "atari5200":
-                return "Atari 5200";
-            case "atari7800":
-                return "Atari 7800";
-            case "atarist":
-                return "Atari ST";
-            case "atomiswave":
-                return "Atomiswave";
-            case "c20":
-                return "Commodore 20";
-            case "c64":
-                return "Commodore 64";
-            case "c128":
-                return "Commodore 128";
-            case "cannonball":
-                return "Cannonball";
-            case "cavestory":
-                return "Cave Story";
-            case "cgenius":
-                return "Commander Genius";
-            case "channelf":
-                return "Channel F";
-            case "colecovision":
-                return "Colecovision";
-            case "cplus4":
-                return "Commodore Plus/4";
-            case "cps1":
-                return "CPS-1";
-            case "cps2":
-                return "CPS-2";
-            case "cps3":
-                return "CPS-3";
-            case "daphne":
-                return "Daphne";
-            case "dcim":
-                return "DCIM";
-            case "devilutionx":
-                return "DevilutionX";
-            case "dos":
-                return "DOS";
-            case "dreamcast":
-                return "Dreamcast";
-            case "easyrpg":
-                return "EasyRPG";
-            case "fbneo":
-                return "FinalBurn Neo";
-            case "fds":
-                return "Famicom Disk System";
-            case "gameandwatch":
-                return "Game & Watch";
-            case "gamegear":
-                return "Game Gear";
-            case "gb":
-                return "Game Boy";
-            case "gb2players":
-                return "Game Boy (2 Players)";
-            case "gba":
-                return "Game Boy Advance";
-            case "gbc":
-                return "Game Boy Color";
-            case "gbc2players":
-                return "Game Boy Color (2 Players)";
-            case "gc":
-                return "GameCube";
-            case "gx4000":
-                return "Amstrad GX4000";
-            case "hbmame":
-                return "HBMAME";
-            case "intellivision":
-                return "Intellivision";
-            case "lightgun":
-                return "Lightgun Games";
-            case "lutro":
-                return "Lutro";
-            case "lynx":
-                return "Atari Lynx";
-            case "mame":
-                return "MAME";
-            case "mastersystem":
-                return "Sega Master System";
-            case "megadrive":
-                return "Sega Mega Drive";
-            case "mrboom":
-                return "Mr. Boom";
-            case "msx1":
-                return "MSX";
-            case "msx2":
-                return "MSX2";
-            case "msx2+":
-                return "MSX2+";
-            case "msxturbor":
-                return "MSX Turbo R";
-            case "n64":
-                return "Nintendo 64";
-            case "n64dd":
-                return "Nintendo 64DD";
-            case "naomi":
-                return "Naomi";
-            case "nds":
-                return "Nintendo DS";
-            case "neogeo":
-                return "Neo Geo";
-            case "neogeocd":
-                return "Neo Geo CD";
-            case "nes":
-                return "Nintendo Entertainment System";
-            case "ngp":
-                return "Neo Geo Pocket";
-            case "ngpc":
-                return "Neo Geo Pocket Color";
-            case "o2em":
-                return "Odyssey 2 (O2EM)";
-            case "openbor":
-                return "OpenBOR";
-            case "pc88":
-                return "NEC PC-8801";
-            case "pc98":
-                return "NEC PC-9801";
-            case "pcengine":
-                return "PC Engine";
-            case "pcenginecd":
-                return "PC Engine CD";
-            case "pcfx":
-                return "PC-FX";
-            case "pet":
-                return "Commodore PET";
-            case "pico8":
-                return "PICO-8";
-            case "pokemini":
-                return "Pokemini";
-            case "ports":
-                return "Ports";
-            case "prboom":
-                return "PrBoom";
-            case "ps2":
-                return "PlayStation 2";
-            case "psp":
-                return "PlayStation Portable";
-            case "psx":
-                return "PlayStation";
-            case "pygame":
-                return "Pygame";
-            case "satellaview":
-                return "Satellaview";
-            case "saturn":
-                return "Sega Saturn";
-            case "scummvm":
-                return "ScummVM";
-            case "sdlpop":
-                return "SDL Pop";
-            case "sega32x":
-                return "Sega 32X";
-            case "segacd":
-                return "Sega CD";
-            case "sg1000":
-                return "SG-1000";
-            case "snes":
-                return "Super Nintendo";
-            case "snes-msu1":
-                return "Super Nintendo (MSU-1)";
-            case "solarus":
-                return "Solarus";
-            case "sufami":
-                return "Super Famicom";
-            case "supergrafx":
-                return "PC Engine SuperGrafx";
-            case "thomson":
-                return "Thomson";
-            case "tic80":
-                return "TIC-80";
-            case "tyrquake":
-                return "Tyrquake";
-            case "varcade":
-                return "Virtual Arcade";
-            case "vectrex":
-                return "Vectrex";
-            case "virtualboy":
-                return "Virtual Boy";
-            default:
-                return "Unknow System";
-        }
+            "wswan" => "Wonderswan",
+            "wswanc" => "Wonderswan Color",
+            "x1" => "X1",
+            "x68000" => "Sharp X68000",
+            "xash3d_fwgs" => "Xash3D (FWGS)",
+            "zx81" => "ZX81",
+            "zxspectrum" => "ZX Spectrum",
+            "3do" => "3DO",
+            "amiga500" => "Amiga 500",
+            "amiga1200" => "Amiga 1200",
+            "amigacd32" => "Amiga CD32",
+            "amigacdtv" => "Amiga CDTV",
+            "amstradcpc" => "Amstrad CPC",
+            "anbernic" => "Anbernic",
+            "arcade" => "Arcade",
+            "atari800" => "Atari 800",
+            "atari2600" => "Atari 2600",
+            "atari5200" => "Atari 5200",
+            "atari7800" => "Atari 7800",
+            "atarist" => "Atari ST",
+            "atomiswave" => "Atomiswave",
+            "c20" => "Commodore 20",
+            "c64" => "Commodore 64",
+            "c128" => "Commodore 128",
+            "cannonball" => "Cannonball",
+            "cavestory" => "Cave Story",
+            "cgenius" => "Commander Genius",
+            "channelf" => "Channel F",
+            "colecovision" => "Colecovision",
+            "cplus4" => "Commodore Plus/4",
+            "cps1" => "CPS-1",
+            "cps2" => "CPS-2",
+            "cps3" => "CPS-3",
+            "daphne" => "Daphne",
+            "dcim" => "DCIM",
+            "devilutionx" => "DevilutionX",
+            "dos" => "DOS",
+            "dreamcast" => "Dreamcast",
+            "easyrpg" => "EasyRPG",
+            "fbneo" => "FinalBurn Neo",
+            "fds" => "Famicom Disk System",
+            "gameandwatch" => "Game & Watch",
+            "gamegear" => "Game Gear",
+            "gb" => "Game Boy",
+            "gb2players" => "Game Boy (2 Players)",
+            "gba" => "Game Boy Advance",
+            "gbc" => "Game Boy Color",
+            "gbc2players" => "Game Boy Color (2 Players)",
+            "gc" => "GameCube",
+            "gx4000" => "Amstrad GX4000",
+            "hbmame" => "HBMAME",
+            "intellivision" => "Intellivision",
+            "lightgun" => "Lightgun Games",
+            "lutro" => "Lutro",
+            "lynx" => "Atari Lynx",
+            "mame" => "MAME",
+            "mastersystem" => "Sega Master System",
+            "megadrive" => "Sega Mega Drive",
+            "mrboom" => "Mr. Boom",
+            "msx1" => "MSX",
+            "msx2" => "MSX2",
+            "msx2+" => "MSX2+",
+            "msxturbor" => "MSX Turbo R",
+            "n64" => "Nintendo 64",
+            "n64dd" => "Nintendo 64DD",
+            "naomi" => "Naomi",
+            "nds" => "Nintendo DS",
+            "neogeo" => "Neo Geo",
+            "neogeocd" => "Neo Geo CD",
+            "nes" => "Nintendo Entertainment System",
+            "ngp" => "Neo Geo Pocket",
+            "ngpc" => "Neo Geo Pocket Color",
+            "o2em" => "Odyssey 2 (O2EM)",
+            "openbor" => "OpenBOR",
+            "pc88" => "NEC PC-8801",
+            "pc98" => "NEC PC-9801",
+            "pcengine" => "PC Engine",
+            "pcenginecd" => "PC Engine CD",
+            "pcfx" => "PC-FX",
+            "pet" => "Commodore PET",
+            "pico8" => "PICO-8",
+            "pokemini" => "Pokemini",
+            "ports" => "Ports",
+            "prboom" => "PrBoom",
+            "ps2" => "PlayStation 2",
+            "psp" => "PlayStation Portable",
+            "psx" => "PlayStation",
+            "pygame" => "Pygame",
+            "satellaview" => "Satellaview",
+            "saturn" => "Sega Saturn",
+            "scummvm" => "ScummVM",
+            "sdlpop" => "SDL Pop",
+            "sega32x" => "Sega 32X",
+            "segacd" => "Sega CD",
+            "sg1000" => "SG-1000",
+            "snes" => "Super Nintendo",
+            "snes-msu1" => "Super Nintendo (MSU-1)",
+            "solarus" => "Solarus",
+            "sufami" => "Super Famicom",
+            "supergrafx" => "PC Engine SuperGrafx",
+            "thomson" => "Thomson",
+            "tic80" => "TIC-80",
+            "tyrquake" => "Tyrquake",
+            "varcade" => "Virtual Arcade",
+            "vectrex" => "Vectrex",
+            "virtualboy" => "Virtual Boy",
+            _ => "Unknow System",
+        };
     }
 }
