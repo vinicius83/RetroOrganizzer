@@ -1,6 +1,7 @@
 using CommunityToolkit.Maui.Storage;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
+using RetroOrganizzer.Models;
 using RetroOrganizzer.Services;
 using static RetroOrganizzer.Pages.XMLEditor;
 
@@ -29,6 +30,8 @@ public partial class Settings : ContentPage
             ButtonChooseFolder.Text = "Select your root game folder";
             LabelSelectedFolder.Text = "Select a folder!.";
         }
+
+        PlatformPicker.SelectedItem = Preferences.Get("platform", "recalbox");
     }
 
     private async void ButtonGameRootFolder_Clicked(object sender, EventArgs e)
@@ -80,21 +83,33 @@ public partial class Settings : ContentPage
         string SystemList = await service.GetSystemListAsync();
         JObject json = JObject.Parse(SystemList);
 
-        //////Keep only the "systemes" section in the config
-        //JToken jsonSystems = json["response"]["systemes"];
+        //Keep only the "systemes" section in the config
+        JToken jsonSystems = json["response"]["systemes"];
 
-        ////Remove "medias" from "systemes" if it exists (medias returns data with passaword dev)
-        //if (jsonSystems != null)
-        //{
-        //    if (jsonSystems["medias"] is JArray mediasArray)
-        //    {
-        //        mediasArray.Parent.Remove();
-        //    }
-        //}
+        foreach (JObject system in jsonSystems)
+        {
+            system.Remove("medias");
+        }
 
-        //string modifiedJson = json.ToString();
+        var appDirectory = AppContext.BaseDirectory;
+        var filesDirectory = Path.Combine(appDirectory, "files");
 
-        ////// Saves the config in a physical json file called "systemList.json"
-        //File.WriteAllText("systemList.json", modifiedJson.ToString());
+        if (!Directory.Exists(filesDirectory))
+        {
+            Directory.CreateDirectory(filesDirectory);
+        }
+
+        string filePath = Path.Combine(filesDirectory, "systemList.json");
+        File.WriteAllText(filePath, jsonSystems.ToString());
+
+        Preferences.Default.Set("jsonSystems", filePath);
+    }
+
+    private void PlatformPicker_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        var picker = (Picker)sender;
+        string selectedPlatform = (string)picker.SelectedItem;
+
+        Preferences.Set("platform", selectedPlatform);
     }
 }

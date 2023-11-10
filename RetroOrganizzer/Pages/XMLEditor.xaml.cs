@@ -1,7 +1,9 @@
 using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Maui.Views;
 using Microsoft.Extensions.Configuration;
-
+using RetroOrganizzer.Models;
+using RetroOrganizzer.Services;
+using System.Text.Json;
 using System.Xml;
 
 namespace RetroOrganizzer.Pages;
@@ -72,7 +74,7 @@ public partial class XMLEditor : ContentPage
         }
     }
 
-    private void System_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+    private async void System_ItemSelected(object sender, SelectedItemChangedEventArgs e)
     {
         loadingIndicator.IsRunning = true;
         loadingIndicator.IsVisible = true;
@@ -82,9 +84,12 @@ public partial class XMLEditor : ContentPage
 
         if (e.SelectedItem != null)
         {
-            LimpaCampos();
+            CleanInputs();
+
             SystemInfo selectedSystem = e.SelectedItem as SystemInfo;
             string selectedFolder = selectedSystem.Folder;
+
+            await GetSystemData(selectedSystem);
 
             string xmlFilePath = Path.Combine(selectedFolder, "gamelist.xml");
             string xmlDirectory = Path.GetDirectoryName(xmlFilePath);
@@ -146,12 +151,63 @@ public partial class XMLEditor : ContentPage
             }
             else
             {
-                DisplayAlert("System Select", $"The selected system doesn't have a gamelist.xml file.", "OK");
+                await DisplayAlert("System Select", $"The selected system doesn't have a gamelist.xml file.", "OK");
             }
         }
 
         loadingIndicator.IsRunning = false;
         loadingIndicator.IsVisible = false;
+    }
+
+    private async Task GetSystemData(SystemInfo selectedSystem)
+    {
+        string jsonSystems = Preferences.Default.Get("jsonSystems", "");
+        string selectedPlatform = Preferences.Get("platform", "");
+
+        string json = File.ReadAllText(jsonSystems);
+
+        List<Dictionary<string, object>> configSystems = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(json);
+
+        string idSistema = "";
+        foreach (var system in configSystems)
+        {
+            JsonElement noms = (JsonElement)system["noms"];
+
+            if (noms.TryGetProperty("nom_" + selectedPlatform, out JsonElement nom_recalbox) && nom_recalbox.GetString() == Path.GetFileName(selectedSystem.Folder))
+            {
+                idSistema = system["id"].ToString();
+                break;
+            }
+        }
+
+        string appDirectory = AppContext.BaseDirectory;
+        string filesDirectory = Path.Combine(appDirectory, "images");
+        if (!Directory.Exists(filesDirectory))
+        {
+            Directory.CreateDirectory(filesDirectory);
+        }
+
+        string imagePath = Path.Combine(filesDirectory, idSistema + "_icon.png");
+
+        //Check if images idSistema + "_icon.png" exists 
+        if (File.Exists(Path.Combine(filesDirectory, idSistema + "_icon.png")))
+        {
+            ImageSystem.Source = ImageSource.FromFile(imagePath);
+        }
+        else
+        {
+            // Download Image from screenScraper
+            var service = new ScreenScraperService();
+            byte[] imageIcon = await service.GetSystemImageAsync(idSistema, "icon");
+
+            // Save the image to the local storage
+            await File.WriteAllBytesAsync(Path.Combine(filesDirectory, idSistema + "_icon" + ".png"), imageIcon);
+
+            if (imageIcon != null)
+            {
+                ImageSystem.Source = ImageSource.FromStream(() => new MemoryStream(imageIcon));
+            }
+        }
     }
 
     private async void ListFolders(object sender, EventArgs e)
@@ -255,7 +311,7 @@ public partial class XMLEditor : ContentPage
 
         if (e.SelectedItem != null && !string.IsNullOrEmpty(xmlFilePath))
         {
-            LimpaCampos();
+            CleanInputs();
             GameInfo selectedGame = e.SelectedItem as GameInfo;
             string selectedGamePath = selectedGame.Path;
 
@@ -443,7 +499,7 @@ public partial class XMLEditor : ContentPage
             }
 
             //Limpa os campos
-            LimpaCampos();
+            CleanInputs();
 
             StackCleanGames.IsVisible = false;
             loadingIndicator.IsRunning = false;
@@ -460,7 +516,7 @@ public partial class XMLEditor : ContentPage
         }
     }
 
-    private void LimpaCampos()
+    private void CleanInputs()
     {
         GameIDEntry.Text = "";
         PathEntry.Text = "";
@@ -483,9 +539,9 @@ public partial class XMLEditor : ContentPage
 
     private async void ShowStackLayoutGames()
     {
-        LimpaCampos();
+        CleanInputs();
 
-        StackLayoutSystemSelected.IsVisible = true;
+        GridSystemSelected.IsVisible = true;
 
         await StackLayoutSystems.TranslateTo(0, -StackLayoutSystems.Height, 300); // Move para cima
         StackLayoutSystems.IsVisible = false;
@@ -496,9 +552,9 @@ public partial class XMLEditor : ContentPage
 
     private async void ShowStackLayoutSystems()
     {
-        LimpaCampos();
+        CleanInputs();
 
-        StackLayoutSystemSelected.IsVisible = false;
+        GridSystemSelected.IsVisible = false;
 
         await StackLayoutGames.TranslateTo(0, -StackLayoutGames.Height, 300); // Move para cima
         StackLayoutGames.IsVisible = false;
@@ -513,12 +569,6 @@ public partial class XMLEditor : ContentPage
         public string Path { get; set; }
         public string Name { get; set; }
         public bool IsGameNotFound { get; set; }
-    }
-
-    public class SystemInfo
-    {
-        public string Folder { get; set; }
-        public string System { get; set; }
     }
 
     static string SystemByFolder(string folder)

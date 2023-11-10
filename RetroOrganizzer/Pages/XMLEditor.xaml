@@ -45,9 +45,8 @@
     <Grid>
         <StackLayout Padding="10">
             <!--First Row -->
-            <Grid Margin="1" IsClippedToBounds="False" HorizontalOptions="FillAndExpand">
+            <Grid x:Name="GridSystemSelected" Margin="1" IsClippedToBounds="False" HorizontalOptions="FillAndExpand" IsVisible="false" >
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Border Grid.Column="0"  Margin="10,0,0,0" HorizontalOptions="FillAndExpand" Style="{StaticResource DarkBorderView}">
@@ -56,23 +55,17 @@
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <StackLayout x:Name="StackLayoutSystemSelected" Grid.Row="0"  Orientation="Horizontal" Spacing="10" IsVisible="false">
+                        <StackLayout  Grid.Row="0"  Orientation="Horizontal" Spacing="10">
                             <Label Text="System:"></Label>
                             <Label x:Name="LabelSelectedSystem"></Label>
                             <Button x:Name="ButtonShowSystems" Text="Back to Systems" Clicked="ButtonShowSystems_Clicked" BackgroundColor="#007BFF" TextColor="White" VerticalOptions="CenterAndExpand"></Button>
                         </StackLayout>
+                        <StackLayout  Grid.Row="1"  Orientation="Horizontal" Spacing="10">
+                            <Image x:Name="ImageSystem" Aspect="AspectFill" WidthRequest="50" />
+                        </StackLayout>
                         <StackLayout Grid.Row="1"  Orientation="Horizontal" Spacing="10">
                             <Image></Image>
                         </StackLayout>
-                    </Grid>
-                </Border>
-                <Border Grid.Column="1"  Margin="10,0,0,0" HorizontalOptions="FillAndExpand" Style="{StaticResource DarkBorderView}">
-                    <Grid Margin="16" IsClippedToBounds="False">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                       
                     </Grid>
                 </Border>
             </Grid>
