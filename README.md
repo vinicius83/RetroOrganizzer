@@ -13,5 +13,9 @@ The main function of the App:
   - sync with micro SD card
   - etc.
 
-Layout is still a mess, I'll adjust it over time
-![image](https://github.com/vinicius83/RetroOrganizzer/assets/34111669/bd3aeb16-ac5c-4caa-850c-421fe4c223e4)
+
+![image](https://github.com/vinicius83/RetroOrganizzer/assets/34111669/b62c9d91-e8db-462a-98b5-4e9d2cc7c6d1)
+
+
+
+![image](https://github.com/vinicius83/RetroOrganizzer/assets/34111669/038d61a4-4ea4-4a75-9f74-0c347b02ff5c)
