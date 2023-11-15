@@ -182,17 +182,27 @@ public partial class XMLEditor : ContentPage
 
         string appDirectory = AppContext.BaseDirectory;
         string filesDirectory = Path.Combine(appDirectory, "images");
+
+        //Create the directory if it doesn't exist
         if (!Directory.Exists(filesDirectory))
         {
             Directory.CreateDirectory(filesDirectory);
         }
 
-        string imagePath = Path.Combine(filesDirectory, idSistema + "_icon.png");
+        await GetIcon(idSistema, filesDirectory);
+
+        await GetLogo(idSistema, filesDirectory);
+
+    }
+
+    private async Task GetIcon(string idSistema, string filesDirectory)
+    {
+        string iconPath = Path.Combine(filesDirectory, idSistema + "_icon.png");
 
         //Check if images idSistema + "_icon.png" exists 
-        if (File.Exists(Path.Combine(filesDirectory, idSistema + "_icon.png")))
+        if (File.Exists(iconPath))
         {
-            ImageSystem.Source = ImageSource.FromFile(imagePath);
+            IconSystem.Source = ImageSource.FromFile(iconPath);
         }
         else
         {
@@ -205,7 +215,32 @@ public partial class XMLEditor : ContentPage
 
             if (imageIcon != null)
             {
-                ImageSystem.Source = ImageSource.FromStream(() => new MemoryStream(imageIcon));
+                IconSystem.Source = ImageSource.FromStream(() => new MemoryStream(imageIcon));
+            }
+        }
+    }
+
+    private async Task GetLogo(string idSistema, string filesDirectory)
+    {
+        string logoPath = Path.Combine(filesDirectory, idSistema + "_logo-monochrome(wor).png");
+
+        //Check if images idSistema + "_logo-monochrome(wor).png" exists 
+        if (File.Exists(logoPath))
+        {
+            LogoSystem.Source = ImageSource.FromFile(logoPath);
+        }
+        else
+        {
+            // Download Image from screenScraper
+            var service = new ScreenScraperService();
+            byte[] imageLogo = await service.GetSystemImageAsync(idSistema, "logo-monochrome(wor)");
+
+            // Save the image to the local storage
+            await File.WriteAllBytesAsync(Path.Combine(filesDirectory, idSistema + "_logo-monochrome(wor)" + ".png"), imageLogo);
+
+            if (imageLogo != null)
+            {
+                LogoSystem.Source = ImageSource.FromStream(() => new MemoryStream(imageLogo));
             }
         }
     }

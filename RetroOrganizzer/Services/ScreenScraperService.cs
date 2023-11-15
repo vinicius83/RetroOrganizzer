@@ -37,7 +37,19 @@ namespace RetroOrganizzer.Services
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.AcceptEncoding.Add(new System.Net.Http.Headers.StringWithQualityHeaderValue("gzip"));
 
-            using var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            HttpResponseMessage response = null;
+
+            for (int i = 0; i < 3; i++)
+            {
+                response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    break;
+                }
+            }
+
+            //using var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();
 
             var contentStream = await response.Content.ReadAsStreamAsync();

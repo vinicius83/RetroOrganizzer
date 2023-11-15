@@ -330,4 +330,11 @@
         <Setter Property="StrokeThickness" Value="1"/>
     </Style>
 
+    <Style x:Key="VeryLightBorderView" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource  NeutralBrush}"/>
+        <Setter Property="Stroke" Value="Black"/>
+        <Setter Property="StrokeShape" Value="{RoundRectangle CornerRadius=8}"/>
+        <Setter Property="StrokeThickness" Value="3"/>
+    </Style>
+
 </ResourceDictionary>    
