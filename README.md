@@ -9,7 +9,7 @@ Building with .NET MAUI
 The main function of the App:
   - Helps organize the gamelist.xml with editing, cleaning xml nodes that are no longer exists in the folder
   - Bin to chd conversion
-  - Integrate with screenscraper (if the French guy lets you)
+  - Integration with screenscraper
   - sync with micro SD card
   - etc.
 
