@@ -30,8 +30,6 @@ public partial class Settings : ContentPage
             ButtonChooseFolder.Text = "Select your root game folder";
             LabelSelectedFolder.Text = "Select a folder!.";
         }
-
-        PlatformPicker.SelectedItem = Preferences.Get("platform", "recalbox");
     }
 
     private async void ButtonGameRootFolder_Clicked(object sender, EventArgs e)
@@ -59,7 +57,7 @@ public partial class Settings : ContentPage
             if (result != null)
             {
                 Preferences.Default.Set("rootFolder", rootFolder);
-                GetSystemDataAsync();
+                GetSystemData();
             }
             else
             {
@@ -77,10 +75,10 @@ public partial class Settings : ContentPage
         }
     }
 
-    private async void GetSystemDataAsync()
+    private void GetSystemData()
     {
         var service = new ScreenScraperService();
-        string SystemList = await service.GetSystemListAsync();
+        string SystemList = service.GetSystemList();
         JObject json = JObject.Parse(SystemList);
 
         //Keep only the "systemes" section in the config
@@ -105,11 +103,4 @@ public partial class Settings : ContentPage
         Preferences.Default.Set("jsonSystems", filePath);
     }
 
-    private void PlatformPicker_SelectedIndexChanged(object sender, EventArgs e)
-    {
-        var picker = (Picker)sender;
-        string selectedPlatform = (string)picker.SelectedItem;
-
-        Preferences.Set("platform", selectedPlatform);
-    }
 }

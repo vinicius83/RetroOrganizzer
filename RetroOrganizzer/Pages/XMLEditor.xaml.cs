@@ -1,6 +1,7 @@
 using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Maui.Views;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using RetroOrganizzer.Models;
 using RetroOrganizzer.Services;
 using System.Text.Json;
@@ -92,27 +93,23 @@ public partial class XMLEditor : ContentPage
             await GetSystemData(selectedSystem);
 
             string xmlFilePath = Path.Combine(selectedFolder, "gamelist.xml");
-            string xmlDirectory = Path.GetDirectoryName(xmlFilePath);
+
 
             if (File.Exists(xmlFilePath))
             {
-                // Load configuration from XML file
-                var config = new ConfigurationBuilder()
-                 .SetBasePath(Directory.GetCurrentDirectory())
-                 .AddXmlFile(xmlFilePath)
-                 .Build();
+                string xmlDirectory = Path.GetDirectoryName(xmlFilePath);
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(xmlFilePath);
 
-                // Extract game names from configuration
-                var gameSections = config.GetSection("game").GetChildren();
+                XmlNodeList gameNodes = xmlDoc.SelectNodes("/gameList/game");
 
-                // List to show in ListView
-                List<GameInfo> gamesInfo = new();
+                List<GameInfo> gamesInfo = new List<GameInfo>();
 
-                foreach (var gameSection in gameSections)
+                foreach (XmlNode gameNode in gameNodes)
                 {
-                    string path = gameSection["path"];
-                    string name = gameSection["name"];
-                    string id = gameSection["id"];
+                    string path = gameNode.SelectSingleNode("path")?.InnerText;
+                    string name = gameNode.SelectSingleNode("name")?.InnerText;
+                    string id = gameNode.Attributes["id"]?.Value;
 
                     if (!string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(name))
                     {
@@ -163,21 +160,61 @@ public partial class XMLEditor : ContentPage
     {
         string jsonSystems = Preferences.Default.Get("jsonSystems", "");
         string selectedPlatform = Preferences.Get("platform", "");
+        string folder = Path.GetFileName(selectedSystem.Folder);
+
+        IconSystem.Source = null;
+        LogoSystem.Source = null;
+
+        // RetroArch does't have some system names in ScreenScraper, so I change it to "nom_eu" pattern
+        switch (folder.ToLower())
+        {
+            case "wswanc":
+                folder = "wonderswan color";
+                break;
+            case "cps1":
+                folder = "capcom play system";
+                break;
+            case "cps2":
+                folder = "capcom play system 2";
+                break;
+            case "cps3":
+                folder = "capcom play system 3";
+                break;
+
+        }
 
         string json = File.ReadAllText(jsonSystems);
 
-        List<Dictionary<string, object>> configSystems = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(json);
+        List<Dictionary<string, object>> configSystems = System.Text.Json.JsonSerializer.Deserialize<List<Dictionary<string, object>>>(json);
 
         string idSistema = "";
         foreach (var system in configSystems)
         {
-            JsonElement noms = (JsonElement)system["noms"];
-
-            if (noms.TryGetProperty("nom_" + selectedPlatform, out JsonElement nom_recalbox) && nom_recalbox.GetString() == Path.GetFileName(selectedSystem.Folder))
+            if (system.TryGetValue("noms", out var nomsElement) && nomsElement is JsonElement noms)
             {
-                idSistema = system["id"].ToString();
+                foreach (var property in noms.EnumerateObject())
+                {
+                    string propertyName = property.Name;
+                    JsonElement propertyValue = property.Value;
+
+                    // Verifica se o valor da propriedade contém "folder" (case-insensitive)
+                    if (propertyValue.ToString().Equals(folder, StringComparison.OrdinalIgnoreCase))
+                    {
+                        idSistema = system.TryGetValue("id", out var idElement) ? idElement.ToString() : "";
+                        break;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(idSistema))
+            {
                 break;
             }
+        }
+
+        if (idSistema == "")
+        {
+            return;
         }
 
         string appDirectory = AppContext.BaseDirectory;
@@ -189,13 +226,13 @@ public partial class XMLEditor : ContentPage
             Directory.CreateDirectory(filesDirectory);
         }
 
-        await GetIcon(idSistema, filesDirectory);
+        GetIcon(idSistema, filesDirectory);
 
-        await GetLogo(idSistema, filesDirectory);
+        GetLogo(idSistema, filesDirectory);
 
     }
 
-    private async Task GetIcon(string idSistema, string filesDirectory)
+    private void GetIcon(string idSistema, string filesDirectory)
     {
         string iconPath = Path.Combine(filesDirectory, idSistema + "_icon.png");
 
@@ -208,10 +245,10 @@ public partial class XMLEditor : ContentPage
         {
             // Download Image from screenScraper
             var service = new ScreenScraperService();
-            byte[] imageIcon = await service.GetSystemImageAsync(idSistema, "icon");
+            byte[] imageIcon = service.GetSystemImage(idSistema, "icon");
 
             // Save the image to the local storage
-            await File.WriteAllBytesAsync(Path.Combine(filesDirectory, idSistema + "_icon" + ".png"), imageIcon);
+            File.WriteAllBytesAsync(Path.Combine(filesDirectory, idSistema + "_icon" + ".png"), imageIcon);
 
             if (imageIcon != null)
             {
@@ -220,7 +257,7 @@ public partial class XMLEditor : ContentPage
         }
     }
 
-    private async Task GetLogo(string idSistema, string filesDirectory)
+    private void GetLogo(string idSistema, string filesDirectory)
     {
         string logoPath = Path.Combine(filesDirectory, idSistema + "_logo-monochrome(wor).png");
 
@@ -233,10 +270,10 @@ public partial class XMLEditor : ContentPage
         {
             // Download Image from screenScraper
             var service = new ScreenScraperService();
-            byte[] imageLogo = await service.GetSystemImageAsync(idSistema, "logo-monochrome(wor)");
+            byte[] imageLogo = service.GetSystemImage(idSistema, "logo-monochrome(wor)");
 
             // Save the image to the local storage
-            await File.WriteAllBytesAsync(Path.Combine(filesDirectory, idSistema + "_logo-monochrome(wor)" + ".png"), imageLogo);
+            File.WriteAllBytesAsync(Path.Combine(filesDirectory, idSistema + "_logo-monochrome(wor)" + ".png"), imageLogo);
 
             if (imageLogo != null)
             {

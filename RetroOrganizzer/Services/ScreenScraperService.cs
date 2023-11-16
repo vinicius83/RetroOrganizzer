@@ -1,5 +1,6 @@
 ﻿using RetroOrganizzer.Helper;
 using System.IO.Compression;
+using System.Net;
 
 namespace RetroOrganizzer.Services
 {
@@ -9,68 +10,123 @@ namespace RetroOrganizzer.Services
         private readonly string baseUri = "https://www.screenscraper.fr/api2";
         private readonly string softname = "RetroOrganizzer";
 
-        public static async Task<string> GetDataAsync(string uri)
+        public static string GetData(string uri)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            request.Headers.AcceptEncoding.Add(new System.Net.Http.Headers.StringWithQualityHeaderValue("gzip")); //Compression gzip
-
-            using var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-            response.EnsureSuccessStatusCode();
-
-            var contentStream = await response.Content.ReadAsStreamAsync();
-
-            // Unzip if response is gzipped
-            if (response.Content.Headers.ContentEncoding.Contains("gzip"))
+            try
             {
-                var decompressionStream = new GZipStream(contentStream, CompressionMode.Decompress);
-                var streamReader = new StreamReader(decompressionStream);
-                return await streamReader.ReadToEndAsync();
-            }
-            else
-            {
-                return await response.Content.ReadAsStringAsync();
-            }
-        }
+                var attempt = 0;
+                const int maxAttempts = 3;
 
-        public static async Task<byte[]> GetImageAsync(string uri)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            request.Headers.AcceptEncoding.Add(new System.Net.Http.Headers.StringWithQualityHeaderValue("gzip"));
-
-            HttpResponseMessage response = null;
-
-            for (int i = 0; i < 3; i++)
-            {
-                response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-
-                if (response.IsSuccessStatusCode)
+                while (attempt < maxAttempts)
                 {
-                    break;
+                    try
+                    {
+                        var request = new HttpRequestMessage(HttpMethod.Get, uri);
+                        request.Headers.AcceptEncoding.Add(new System.Net.Http.Headers.StringWithQualityHeaderValue("gzip"));
+
+                        HttpResponseMessage response = _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).Result;
+                        response.EnsureSuccessStatusCode();
+
+                        var contentStream = response.Content.ReadAsStreamAsync().Result;
+
+                        // Unzip if response is gzipped
+                        if (response.Content.Headers.ContentEncoding.Contains("gzip"))
+                        {
+                            var decompressionStream = new GZipStream(contentStream, CompressionMode.Decompress);
+                            var streamReader = new StreamReader(decompressionStream);
+                            return streamReader.ReadToEnd();
+                        }
+                        else
+                        {
+                            return response.Content.ReadAsStringAsync().Result;
+                        }
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        if (ex.StatusCode == HttpStatusCode.TooManyRequests)
+                        {
+                            Console.WriteLine($"Too Many Requests. Retrying after {Math.Pow(2, attempt)} seconds.");
+                            Thread.Sleep((int)Math.Pow(2, attempt) * 1000);
+                            attempt++;
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
                 }
+
+                Console.WriteLine("Maximum number of attempts exceeded.");
+                return null;
             }
-
-            //using var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-            response.EnsureSuccessStatusCode();
-
-            var contentStream = await response.Content.ReadAsStreamAsync();
-
-            // Unzip if response is gzipped
-            if (response.Content.Headers.ContentEncoding.Contains("gzip"))
+            catch (Exception ex)
             {
-                using var decompressionStream = new GZipStream(contentStream, CompressionMode.Decompress);
-                using var memoryStream = new MemoryStream();
-                await decompressionStream.CopyToAsync(memoryStream);
-                return memoryStream.ToArray();
-            }
-            else
-            {
-                using var memoryStream = new MemoryStream();
-                await contentStream.CopyToAsync(memoryStream);
-                return memoryStream.ToArray();
+                Console.WriteLine(ex.Message);
+                return null;
             }
         }
 
-        public Task<string> BuildUriAsync(string endpoint, string[] parameters = null)
+        public static byte[] GetImage(string uri)
+        {
+            try
+            {
+                var attempt = 0;
+                const int maxAttempts = 3;
+
+                while (attempt < maxAttempts)
+                {
+                    try
+                    {
+                        var request = new HttpRequestMessage(HttpMethod.Get, uri);
+                        request.Headers.AcceptEncoding.Add(new System.Net.Http.Headers.StringWithQualityHeaderValue("gzip"));
+
+                        HttpResponseMessage response = _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).Result;
+                        response.EnsureSuccessStatusCode();
+
+                        var contentStream = response.Content.ReadAsStreamAsync().Result;
+
+                        // Unzip if response is gzipped
+                        if (response.Content.Headers.ContentEncoding.Contains("gzip"))
+                        {
+                            using var decompressionStream = new GZipStream(contentStream, CompressionMode.Decompress);
+                            using var memoryStream = new MemoryStream();
+                            decompressionStream.CopyTo(memoryStream);
+                            return memoryStream.ToArray();
+                        }
+                        else
+                        {
+                            using var memoryStream = new MemoryStream();
+                            contentStream.CopyTo(memoryStream);
+                            return memoryStream.ToArray();
+                        }
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        if (ex.StatusCode == HttpStatusCode.TooManyRequests)
+                        {
+                            Console.WriteLine($"Too Many Requests. Retrying after {Math.Pow(2, attempt)} seconds.");
+                            Thread.Sleep((int)Math.Pow(2, attempt) * 1000);
+                            attempt++;
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
+                }
+
+                Console.WriteLine("Maximum number of attempts exceeded.");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
+        }
+
+
+        public string BuildUriAsync(string endpoint, string[] parameters = null)
         {
             string devId = AppData.Login();
             string devPassword = Cryptography.DecryptString(AppData.Password(), Cryptography.key());
@@ -81,24 +137,24 @@ namespace RetroOrganizzer.Services
                 URL += $"&{parameter}";
             }
 
-            return Task.FromResult(URL);
+            return URL;
         }
 
-        public async Task<string> GetSystemListAsync()
+        public string GetSystemList()
         {
-            string uri = await BuildUriAsync("systemesListe.php");
-            return await ScreenScraperService.GetDataAsync(uri);
+            string uri = BuildUriAsync("systemesListe.php");
+            return ScreenScraperService.GetData(uri);
         }
 
-        public async Task<byte[]> GetSystemImageAsync(string systemId, string media)
+        public byte[] GetSystemImage(string systemId, string media)
         {
             string[] param = new string[2];
             param[0] = $"systemeid={systemId}";
             param[1] = $"media={media}";
 
-            string uri = await BuildUriAsync("mediaSysteme.php", param);
+            string uri = BuildUriAsync("mediaSysteme.php", param);
 
-            return await ScreenScraperService.GetImageAsync(uri);
+            return ScreenScraperService.GetImage(uri);
         }
 
     }
